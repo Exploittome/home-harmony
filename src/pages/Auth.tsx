@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/hooks/useTheme';
 import { Sun, Moon, ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function Auth() {
   const [searchParams] = useSearchParams();
@@ -20,6 +21,23 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
 
   const isLogin = mode === 'login';
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        navigate('/main');
+      }
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        navigate('/main');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,19 +71,56 @@ export default function Auth() {
 
     setLoading(true);
 
-    // Simulate auth - will be replaced with Supabase
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    try {
+      if (isLogin) {
+        const { error } = await supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password,
+        });
 
-    toast({
-      title: isLogin ? 'Успішний вхід!' : 'Реєстрація успішна!',
-      description: isLogin ? 'Ласкаво просимо!' : 'Перевірте вашу пошту для підтвердження.',
-    });
+        if (error) {
+          if (error.message === 'Invalid login credentials') {
+            throw new Error('Невірний email або пароль');
+          }
+          throw error;
+        }
 
-    setLoading(false);
-    
-    // Navigate to main after successful auth
-    if (isLogin) {
-      navigate('/main');
+        toast({
+          title: 'Успішний вхід!',
+          description: 'Ласкаво просимо!',
+        });
+        navigate('/main');
+      } else {
+        const redirectUrl = `${window.location.origin}/`;
+        
+        const { error } = await supabase.auth.signUp({
+          email: email.trim(),
+          password,
+          options: {
+            emailRedirectTo: redirectUrl,
+          },
+        });
+
+        if (error) {
+          if (error.message.includes('already registered')) {
+            throw new Error('Користувач з таким email вже зареєстрований');
+          }
+          throw error;
+        }
+
+        toast({
+          title: 'Реєстрація успішна!',
+          description: 'Перевірте вашу пошту для підтвердження.',
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Помилка',
+        description: error.message || 'Щось пішло не так',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
