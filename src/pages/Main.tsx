@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useTheme } from '@/hooks/useTheme';
-import { Sun, Moon, LogOut, Search, MapPin, Home, Building2, Filter, Lock, Bookmark, BookmarkCheck, X, Maximize2, Car } from 'lucide-react';
+import { Sun, Moon, LogOut, Search, MapPin, Home, Building2, Filter, Lock, Bookmark, BookmarkCheck, X, Maximize2, Car, Phone, Calendar, CheckCircle, XCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
@@ -18,6 +18,7 @@ interface Listing {
   rooms: number | null;
   area: number | null;
   has_parking: boolean | null;
+  phone: string | null;
   image_url: string | null;
   description: string | null;
   created_at: string;
@@ -52,7 +53,7 @@ export default function Main() {
   const fetchListings = async () => {
     const { data, error } = await supabase
       .from('listings')
-      .select('id, title, price, city, rooms, area, has_parking, image_url, description, created_at')
+      .select('id, title, price, city, rooms, area, has_parking, phone, image_url, description, created_at')
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -495,36 +496,29 @@ export default function Main() {
 
             {/* Listing Detail Modal */}
             <Dialog open={!!selectedListing} onOpenChange={(open) => !open && setSelectedListing(null)}>
-              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0">
                 {selectedListing && (
-                  <>
-                    <DialogHeader>
-                      <DialogTitle className="font-display text-xl">
-                        {selectedListing.title}
-                      </DialogTitle>
-                    </DialogHeader>
-                    
-                    <div className="space-y-6">
-                      {/* Image */}
-                      <div className="relative aspect-video rounded-xl overflow-hidden">
-                        <img
-                          src={selectedListing.image_url || 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop'}
-                          alt={selectedListing.title}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-
-                      {/* Price */}
-                      <div className="flex items-center justify-between">
-                        <span className="text-2xl font-bold text-accent">
-                          {selectedListing.price.toLocaleString()} ₴/міс
-                        </span>
+                  <div className="flex flex-col">
+                    {/* Image Viewer */}
+                    <div className="relative aspect-[16/10] bg-muted">
+                      <img
+                        src={selectedListing.image_url || 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1200&h=800&fit=crop'}
+                        alt={selectedListing.title}
+                        className="w-full h-full object-cover"
+                      />
+                      {/* Image overlay with price */}
+                      <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between">
+                        <div className="px-4 py-2 rounded-xl bg-background/95 backdrop-blur-sm">
+                          <span className="text-2xl font-bold text-accent">
+                            {selectedListing.price.toLocaleString()} ₴/міс
+                          </span>
+                        </div>
                         {userPlan === 'plan_30_days' && (
                           <Button
                             variant={savedIds.has(selectedListing.id) ? "default" : "outline"}
                             size="sm"
                             onClick={() => handleSaveListing(selectedListing.id)}
-                            className="rounded-xl"
+                            className="rounded-xl bg-background/95 backdrop-blur-sm"
                           >
                             {savedIds.has(selectedListing.id) ? (
                               <>
@@ -540,53 +534,137 @@ export default function Main() {
                           </Button>
                         )}
                       </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="p-6 space-y-6">
+                      {/* Title */}
+                      <div>
+                        <h2 className="font-display text-2xl font-bold text-foreground mb-2">
+                          {selectedListing.title}
+                        </h2>
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <MapPin className="w-4 h-4" />
+                          <span>{selectedListing.city}</span>
+                        </div>
+                      </div>
+
+                      {/* Contact Phone */}
+                      {selectedListing.phone && (
+                        <div className="card-container p-4 bg-accent/5 border-accent/20">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center">
+                                <Phone className="w-6 h-6 text-accent" />
+                              </div>
+                              <div>
+                                <p className="text-sm text-muted-foreground">Телефон орендодавця</p>
+                                <p className="text-lg font-semibold text-foreground">{selectedListing.phone}</p>
+                              </div>
+                            </div>
+                            <Button 
+                              variant="hero" 
+                              size="sm"
+                              onClick={() => window.open(`tel:${selectedListing.phone}`, '_self')}
+                              className="rounded-xl"
+                            >
+                              Зателефонувати
+                            </Button>
+                          </div>
+                        </div>
+                      )}
 
                       {/* Details Grid */}
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                        <div className="card-container p-4 text-center">
-                          <MapPin className="w-5 h-5 mx-auto mb-2 text-muted-foreground" />
-                          <p className="text-sm text-muted-foreground">Місто</p>
-                          <p className="font-semibold text-foreground">{selectedListing.city}</p>
+                      <div>
+                        <h3 className="font-semibold text-foreground mb-3">Характеристики</h3>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          <div className="card-container p-4 text-center">
+                            <Home className="w-6 h-6 mx-auto mb-2 text-accent" />
+                            <p className="text-xs text-muted-foreground mb-1">Кімнат</p>
+                            <p className="font-bold text-foreground text-lg">
+                              {selectedListing.rooms || '—'}
+                            </p>
+                          </div>
+                          <div className="card-container p-4 text-center">
+                            <Maximize2 className="w-6 h-6 mx-auto mb-2 text-accent" />
+                            <p className="text-xs text-muted-foreground mb-1">Площа</p>
+                            <p className="font-bold text-foreground text-lg">
+                              {selectedListing.area ? `${selectedListing.area} м²` : '—'}
+                            </p>
+                          </div>
+                          <div className="card-container p-4 text-center">
+                            <Car className="w-6 h-6 mx-auto mb-2 text-accent" />
+                            <p className="text-xs text-muted-foreground mb-1">Паркінг</p>
+                            <div className="flex items-center justify-center gap-1">
+                              {selectedListing.has_parking ? (
+                                <>
+                                  <CheckCircle className="w-5 h-5 text-green-500" />
+                                  <span className="font-bold text-foreground">Є</span>
+                                </>
+                              ) : (
+                                <>
+                                  <XCircle className="w-5 h-5 text-muted-foreground" />
+                                  <span className="font-bold text-muted-foreground">Немає</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                          <div className="card-container p-4 text-center">
+                            <Calendar className="w-6 h-6 mx-auto mb-2 text-accent" />
+                            <p className="text-xs text-muted-foreground mb-1">Дата</p>
+                            <p className="font-bold text-foreground text-sm">
+                              {new Date(selectedListing.created_at).toLocaleDateString('uk-UA')}
+                            </p>
+                          </div>
                         </div>
-                        {selectedListing.rooms && (
-                          <div className="card-container p-4 text-center">
-                            <Home className="w-5 h-5 mx-auto mb-2 text-muted-foreground" />
-                            <p className="text-sm text-muted-foreground">Кімнат</p>
-                            <p className="font-semibold text-foreground">{selectedListing.rooms}</p>
-                          </div>
-                        )}
-                        {selectedListing.area && (
-                          <div className="card-container p-4 text-center">
-                            <Maximize2 className="w-5 h-5 mx-auto mb-2 text-muted-foreground" />
-                            <p className="text-sm text-muted-foreground">Площа</p>
-                            <p className="font-semibold text-foreground">{selectedListing.area} м²</p>
-                          </div>
-                        )}
-                        {selectedListing.has_parking && (
-                          <div className="card-container p-4 text-center">
-                            <Car className="w-5 h-5 mx-auto mb-2 text-muted-foreground" />
-                            <p className="text-sm text-muted-foreground">Паркінг</p>
-                            <p className="font-semibold text-foreground">Є</p>
-                          </div>
-                        )}
                       </div>
 
                       {/* Description */}
                       {selectedListing.description && (
                         <div>
-                          <h4 className="font-semibold text-foreground mb-2">Опис</h4>
-                          <p className="text-muted-foreground whitespace-pre-wrap">
-                            {selectedListing.description}
-                          </p>
+                          <h3 className="font-semibold text-foreground mb-3">Опис</h3>
+                          <div className="card-container p-4">
+                            <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                              {selectedListing.description}
+                            </p>
+                          </div>
                         </div>
                       )}
 
-                      {/* Date */}
-                      <p className="text-sm text-muted-foreground">
-                        Опубліковано: {new Date(selectedListing.created_at).toLocaleDateString('uk-UA')}
-                      </p>
+                      {/* Contact Actions */}
+                      <div className="flex gap-3">
+                        {selectedListing.phone && (
+                          <Button 
+                            variant="hero" 
+                            className="flex-1"
+                            onClick={() => window.open(`tel:${selectedListing.phone}`, '_self')}
+                          >
+                            <Phone className="w-4 h-4 mr-2" />
+                            Зателефонувати
+                          </Button>
+                        )}
+                        {userPlan === 'plan_30_days' && (
+                          <Button
+                            variant={savedIds.has(selectedListing.id) ? "secondary" : "outline"}
+                            className="flex-1"
+                            onClick={() => handleSaveListing(selectedListing.id)}
+                          >
+                            {savedIds.has(selectedListing.id) ? (
+                              <>
+                                <BookmarkCheck className="w-4 h-4 mr-2" />
+                                Видалити зі збережених
+                              </>
+                            ) : (
+                              <>
+                                <Bookmark className="w-4 h-4 mr-2" />
+                                Зберегти оголошення
+                              </>
+                            )}
+                          </Button>
+                        )}
+                      </div>
                     </div>
-                  </>
+                  </div>
                 )}
               </DialogContent>
             </Dialog>
