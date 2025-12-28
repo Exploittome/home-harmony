@@ -4,9 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useTheme } from '@/hooks/useTheme';
-import { Sun, Moon, LogOut, Search, MapPin, Home, Building2, Filter } from 'lucide-react';
+import { Sun, Moon, LogOut, Search, MapPin, Home, Building2, Filter, Lock, MessageCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
+import { useToast } from '@/hooks/use-toast';
 
 // Mock data for listings
 const mockListings = [
@@ -72,12 +73,17 @@ const mockListings = [
   },
 ];
 
+type SubscriptionPlan = 'basic' | 'plan_10_days' | 'plan_30_days';
+
 export default function Main() {
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
+  const { toast } = useToast();
   
   // User state
   const [user, setUser] = useState<User | null>(null);
+  const [userPlan, setUserPlan] = useState<SubscriptionPlan>('basic');
+  const [planLoading, setPlanLoading] = useState(true);
   
   // Filters
   const [city, setCity] = useState('');
@@ -86,13 +92,37 @@ export default function Main() {
   const [rooms, setRooms] = useState('');
   const [propertyType, setPropertyType] = useState('');
 
-  const userPlan = 'basic'; // basic, 10days, 30days
+  // Fetch user subscription
+  const fetchSubscription = async (userId: string) => {
+    const { data, error } = await supabase
+      .from('user_subscriptions')
+      .select('plan, expires_at')
+      .eq('user_id', userId)
+      .single();
+
+    if (error) {
+      console.log('No subscription found, using basic plan');
+      setUserPlan('basic');
+    } else {
+      // Check if subscription is expired
+      if (data.expires_at && new Date(data.expires_at) < new Date()) {
+        setUserPlan('basic');
+      } else {
+        setUserPlan(data.plan as SubscriptionPlan);
+      }
+    }
+    setPlanLoading(false);
+  };
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
       if (!session?.user) {
         navigate('/auth');
+      } else {
+        setTimeout(() => {
+          fetchSubscription(session.user.id);
+        }, 0);
       }
     });
 
@@ -100,6 +130,8 @@ export default function Main() {
       setUser(session?.user ?? null);
       if (!session?.user) {
         navigate('/auth');
+      } else {
+        fetchSubscription(session.user.id);
       }
     });
 
@@ -111,7 +143,22 @@ export default function Main() {
     navigate('/');
   };
 
+  const canUseFilters = userPlan === 'plan_10_days' || userPlan === 'plan_30_days';
+
+  const handleFilterChange = (setter: (value: string) => void, value: string) => {
+    if (!canUseFilters) {
+      toast({
+        title: "Підвищіть план підписки",
+        description: "Для використання фільтрів потрібен план на 10 або 30 днів",
+        variant: "destructive",
+      });
+      return;
+    }
+    setter(value);
+  };
+
   const filteredListings = mockListings.filter((listing) => {
+    if (!canUseFilters) return true; // Show all for basic plan (no filtering)
     if (city && listing.city !== city) return false;
     if (minPrice && listing.price < parseInt(minPrice)) return false;
     if (maxPrice && listing.price > parseInt(maxPrice)) return false;
@@ -122,6 +169,18 @@ export default function Main() {
 
   // Limit listings for basic plan
   const displayedListings = userPlan === 'basic' ? filteredListings.slice(0, 10) : filteredListings;
+
+  const getPlanLabel = (plan: SubscriptionPlan) => {
+    switch (plan) {
+      case 'basic': return 'Базовий план';
+      case 'plan_10_days': return 'План 10 днів';
+      case 'plan_30_days': return 'План 30 днів';
+    }
+  };
+
+  const openTelegramBot = () => {
+    window.open('https://t.me/your_bot_name', '_blank');
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -134,6 +193,16 @@ export default function Main() {
           </Link>
 
           <div className="flex items-center gap-3">
+            {userPlan === 'plan_30_days' && (
+              <Button 
+                variant="default" 
+                onClick={openTelegramBot}
+                className="rounded-full bg-accent hover:bg-accent/90"
+              >
+                <MessageCircle className="h-5 w-5 mr-2" />
+                Telegram бот
+              </Button>
+            )}
             <Button variant="ghost" size="icon" onClick={toggleTheme} className="rounded-full">
               {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </Button>
@@ -155,21 +224,33 @@ export default function Main() {
                 <p className="font-medium text-foreground truncate">{user?.email || 'Завантаження...'}</p>
                 <div className="mt-3">
                   <span className="inline-flex items-center px-3 py-1 rounded-full bg-accent/10 text-accent text-sm font-medium">
-                    {userPlan === 'basic' ? 'Базовий план' : userPlan === '10days' ? '10 днів' : '30 днів'}
+                    {planLoading ? 'Завантаження...' : getPlanLabel(userPlan)}
                   </span>
                 </div>
               </div>
 
               {/* Filters */}
               <div className="space-y-5">
-                <div className="flex items-center gap-2 text-foreground font-semibold">
-                  <Filter className="w-5 h-5" />
-                  <span>Фільтри</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-foreground font-semibold">
+                    <Filter className="w-5 h-5" />
+                    <span>Фільтри</span>
+                  </div>
+                  {!canUseFilters && (
+                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Lock className="w-3 h-3" />
+                      Преміум
+                    </span>
+                  )}
                 </div>
 
-                <div>
+                <div className={!canUseFilters ? 'opacity-60' : ''}>
                   <label className="block text-sm font-medium text-foreground mb-2">Місто</label>
-                  <Select value={city} onValueChange={setCity}>
+                  <Select 
+                    value={city} 
+                    onValueChange={(value) => handleFilterChange(setCity, value)}
+                    disabled={!canUseFilters}
+                  >
                     <SelectTrigger className="rounded-xl">
                       <SelectValue placeholder="Оберіть місто" />
                     </SelectTrigger>
@@ -183,29 +264,35 @@ export default function Main() {
                   </Select>
                 </div>
 
-                <div>
+                <div className={!canUseFilters ? 'opacity-60' : ''}>
                   <label className="block text-sm font-medium text-foreground mb-2">Ціна (грн)</label>
                   <div className="flex gap-2">
                     <Input
                       type="number"
                       placeholder="Від"
                       value={minPrice}
-                      onChange={(e) => setMinPrice(e.target.value)}
+                      onChange={(e) => handleFilterChange(setMinPrice, e.target.value)}
                       className="rounded-xl"
+                      disabled={!canUseFilters}
                     />
                     <Input
                       type="number"
                       placeholder="До"
                       value={maxPrice}
-                      onChange={(e) => setMaxPrice(e.target.value)}
+                      onChange={(e) => handleFilterChange(setMaxPrice, e.target.value)}
                       className="rounded-xl"
+                      disabled={!canUseFilters}
                     />
                   </div>
                 </div>
 
-                <div>
+                <div className={!canUseFilters ? 'opacity-60' : ''}>
                   <label className="block text-sm font-medium text-foreground mb-2">Кімнати</label>
-                  <Select value={rooms} onValueChange={setRooms}>
+                  <Select 
+                    value={rooms} 
+                    onValueChange={(value) => handleFilterChange(setRooms, value)}
+                    disabled={!canUseFilters}
+                  >
                     <SelectTrigger className="rounded-xl">
                       <SelectValue placeholder="Кількість кімнат" />
                     </SelectTrigger>
@@ -218,9 +305,13 @@ export default function Main() {
                   </Select>
                 </div>
 
-                <div>
+                <div className={!canUseFilters ? 'opacity-60' : ''}>
                   <label className="block text-sm font-medium text-foreground mb-2">Тип нерухомості</label>
-                  <Select value={propertyType} onValueChange={setPropertyType}>
+                  <Select 
+                    value={propertyType} 
+                    onValueChange={(value) => handleFilterChange(setPropertyType, value)}
+                    disabled={!canUseFilters}
+                  >
                     <SelectTrigger className="rounded-xl">
                       <SelectValue placeholder="Оберіть тип" />
                     </SelectTrigger>
@@ -237,6 +328,14 @@ export default function Main() {
                   variant="hero"
                   className="w-full"
                   onClick={() => {
+                    if (!canUseFilters) {
+                      toast({
+                        title: "Підвищіть план підписки",
+                        description: "Для використання фільтрів потрібен план на 10 або 30 днів",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
                     setCity('');
                     setMinPrice('');
                     setMaxPrice('');
@@ -247,6 +346,14 @@ export default function Main() {
                   <Search className="w-4 h-4 mr-2" />
                   Скинути фільтри
                 </Button>
+
+                {!canUseFilters && (
+                  <Link to="/subscription" className="block">
+                    <Button variant="outline" className="w-full rounded-xl">
+                      Підвищити план
+                    </Button>
+                  </Link>
+                )}
               </div>
             </div>
           </aside>
@@ -265,7 +372,7 @@ export default function Main() {
             {userPlan === 'basic' && (
               <div className="card-container p-4 mb-6 bg-accent/5 border border-accent/20">
                 <p className="text-sm text-foreground">
-                  💡 У вас базовий план. Для перегляду всіх оголошень та контактних даних{' '}
+                  💡 У вас базовий план. Для використання фільтрів та перегляду всіх оголошень{' '}
                   <Link to="/subscription" className="text-accent font-medium hover:underline">
                     оберіть преміум план
                   </Link>
