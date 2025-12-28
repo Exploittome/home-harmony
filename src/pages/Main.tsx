@@ -320,7 +320,7 @@ export default function Main() {
                       </div>
                     </TooltipTrigger>
                     {!canUseFilters && (
-                      <TooltipContent className="bg-popover border-border">
+                      <TooltipContent variant="warning">
                         <p>🔒 Оновіться до преміум плану для використання фільтрів</p>
                       </TooltipContent>
                     )}
@@ -353,7 +353,7 @@ export default function Main() {
                       </div>
                     </TooltipTrigger>
                     {!canUseFilters && (
-                      <TooltipContent className="bg-popover border-border">
+                      <TooltipContent variant="warning">
                         <p>🔒 Оновіться до преміум плану для використання фільтрів</p>
                       </TooltipContent>
                     )}
@@ -383,7 +383,7 @@ export default function Main() {
                       </div>
                     </TooltipTrigger>
                     {!canUseFilters && (
-                      <TooltipContent className="bg-popover border-border">
+                      <TooltipContent variant="warning">
                         <p>🔒 Оновіться до преміум плану для використання фільтрів</p>
                       </TooltipContent>
                     )}
@@ -413,7 +413,7 @@ export default function Main() {
                       </div>
                     </TooltipTrigger>
                     {!canUseFilters && (
-                      <TooltipContent className="bg-popover border-border">
+                      <TooltipContent variant="warning">
                         <p>🔒 Оновіться до преміум плану для використання фільтрів</p>
                       </TooltipContent>
                     )}
@@ -466,8 +466,8 @@ export default function Main() {
             </div>
 
             {userPlan === 'basic' && (
-              <div className="card-container p-4 mb-6 bg-accent/5 border border-accent/20">
-                <p className="text-base text-foreground">
+              <div className="card-container p-4 mb-6 bg-destructive/10 border border-destructive/30">
+                <p className="text-base text-destructive font-medium">
                   💡 У вас базовий план. Для використання фільтрів та перегляду всіх оголошень{' '}
                   <Link to="/subscription" className="text-destructive font-bold hover:underline">
                     оберіть преміум план
