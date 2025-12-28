@@ -149,10 +149,8 @@ export default function Auth() {
         <div className="card-container p-8 md:p-10">
           {/* Logo */}
           <div className="flex items-center gap-3 mb-8">
-            <div className="w-12 h-12 rounded-full bg-accent flex items-center justify-center">
-              <span className="text-accent-foreground font-bold text-xl">Р</span>
-            </div>
-            <span className="font-display text-2xl font-semibold text-foreground">Рентал</span>
+            <img src="/images/logo.png" alt="GOTOHOME" className="w-12 h-12 object-contain" />
+            <span className="font-display text-2xl font-semibold text-foreground">GOTOHOME</span>
           </div>
 
           <h1 className="font-display text-3xl font-semibold text-foreground mb-2">

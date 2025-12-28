@@ -7,10 +7,8 @@ export function Footer() {
         <div className="grid md:grid-cols-4 gap-8">
           <div className="md:col-span-2">
             <Link to="/" className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center">
-                <span className="text-accent-foreground font-bold text-lg">Р</span>
-              </div>
-              <span className="font-display text-xl font-semibold text-foreground">Рентал</span>
+              <img src="/images/logo.png" alt="GOTOHOME" className="w-10 h-10 object-contain" />
+              <span className="font-display text-xl font-semibold text-foreground">GOTOHOME</span>
             </Link>
             <p className="text-muted-foreground max-w-md">
               Сучасна платформа для пошуку орендного житла в Україні. 
@@ -38,7 +36,7 @@ export function Footer() {
 
         <div className="mt-12 pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-muted-foreground">
-            © 2024 Рентал. Всі права захищено.
+            © 2024 GOTOHOME. Всі права захищено.
           </p>
           <div className="flex gap-6 text-sm text-muted-foreground">
             <span className="hover:text-foreground cursor-pointer smooth-transition">Політика конфіденційності</span>
