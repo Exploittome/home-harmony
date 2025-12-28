@@ -47,6 +47,7 @@ export type Database = {
           has_parking: boolean | null
           id: string
           image_url: string | null
+          phone: string | null
           price: number
           rooms: number | null
           title: string
@@ -60,6 +61,7 @@ export type Database = {
           has_parking?: boolean | null
           id?: string
           image_url?: string | null
+          phone?: string | null
           price: number
           rooms?: number | null
           title: string
@@ -73,6 +75,7 @@ export type Database = {
           has_parking?: boolean | null
           id?: string
           image_url?: string | null
+          phone?: string | null
           price?: number
           rooms?: number | null
           title?: string
