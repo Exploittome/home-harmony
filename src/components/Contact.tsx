@@ -5,50 +5,44 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { Send } from 'lucide-react';
-
 export function Contact() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
-  const { ref, isVisible } = useScrollAnimation();
-
+  const {
+    toast
+  } = useToast();
+  const {
+    ref,
+    isVisible
+  } = useScrollAnimation();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!name.trim() || !email.trim() || !message.trim()) {
       toast({
         title: 'Помилка',
         description: 'Будь ласка, заповніть всі поля',
-        variant: 'destructive',
+        variant: 'destructive'
       });
       return;
     }
-
     setLoading(true);
-    
+
     // Simulate form submission
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
     toast({
       title: 'Повідомлення надіслано!',
-      description: 'Ми зв\'яжемося з вами найближчим часом.',
+      description: 'Ми зв\'яжемося з вами найближчим часом.'
     });
-    
     setName('');
     setEmail('');
     setMessage('');
     setLoading(false);
   };
-
-  return (
-    <section id="contact" className="py-24 px-4">
+  return <section id="contact" className="py-24 px-4">
       <div className="max-w-7xl mx-auto">
-        <div
-          ref={ref}
-          className={`transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
-        >
+        <div ref={ref} className={`transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-semibold text-foreground mb-4">
@@ -58,9 +52,9 @@ export function Contact() {
                 Маєте питання? Потрібна допомога? Напишіть нам, і ми обов'язково відповімо.
               </p>
               <div className="space-y-4 text-muted-foreground">
-                <p>📧 support@rental.ua</p>
-                <p>📞 +380 (44) 123-45-67</p>
-                <p>📍 Київ, Україна</p>
+                <p>📧 support@gotohome.com.ua</p>
+                <p>📞 +380 (77) 777-77-77</p>
+                <p>Львів, Україна</p>
               </div>
             </div>
 
@@ -70,49 +64,21 @@ export function Contact() {
                   <label htmlFor="name" className="block text-sm font-medium text-foreground mb-2">
                     Ім'я
                   </label>
-                  <Input
-                    id="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Ваше ім'я"
-                    className="rounded-xl h-12"
-                    maxLength={100}
-                  />
+                  <Input id="name" value={name} onChange={e => setName(e.target.value)} placeholder="Ваше ім'я" className="rounded-xl h-12" maxLength={100} />
                 </div>
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
                     Email
                   </label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="your@email.com"
-                    className="rounded-xl h-12"
-                    maxLength={255}
-                  />
+                  <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="your@email.com" className="rounded-xl h-12" maxLength={255} />
                 </div>
                 <div>
                   <label htmlFor="message" className="block text-sm font-medium text-foreground mb-2">
                     Повідомлення
                   </label>
-                  <Textarea
-                    id="message"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Ваше повідомлення..."
-                    className="rounded-xl min-h-[120px] resize-none"
-                    maxLength={1000}
-                  />
+                  <Textarea id="message" value={message} onChange={e => setMessage(e.target.value)} placeholder="Ваше повідомлення..." className="rounded-xl min-h-[120px] resize-none" maxLength={1000} />
                 </div>
-                <Button 
-                  type="submit" 
-                  variant="hero" 
-                  size="lg" 
-                  className="w-full"
-                  disabled={loading}
-                >
+                <Button type="submit" variant="hero" size="lg" className="w-full" disabled={loading}>
                   {loading ? 'Надсилання...' : 'Надіслати'}
                   <Send className="w-4 h-4 ml-2" />
                 </Button>
@@ -121,6 +87,5 @@ export function Contact() {
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 }
