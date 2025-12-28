@@ -5,6 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { Send } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 export function Contact() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -29,16 +30,34 @@ export function Contact() {
     }
     setLoading(true);
 
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    toast({
-      title: 'Повідомлення надіслано!',
-      description: 'Ми зв\'яжемося з вами найближчим часом.'
-    });
-    setName('');
-    setEmail('');
-    setMessage('');
-    setLoading(false);
+    try {
+      const { error } = await supabase
+        .from('contact_messages')
+        .insert({
+          name: name.trim(),
+          email: email.trim(),
+          message: message.trim()
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Повідомлення надіслано!',
+        description: 'Ми зв\'яжемося з вами найближчим часом.'
+      });
+      setName('');
+      setEmail('');
+      setMessage('');
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast({
+        title: 'Помилка',
+        description: 'Не вдалося надіслати повідомлення. Спробуйте ще раз.',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
   };
   return <section id="contact" className="py-24 px-4">
       <div className="max-w-7xl mx-auto">
