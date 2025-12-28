@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useTheme } from '@/hooks/useTheme';
 import { Sun, Moon, LogOut, Search, MapPin, Home, Building2, Filter, Lock, Bookmark, BookmarkCheck, X, Maximize2, Car, Phone, Calendar, CheckCircle, XCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -295,85 +296,129 @@ export default function Main() {
                   )}
                 </div>
 
-                <div className={!canUseFilters ? 'opacity-60' : ''}>
-                  <label className="block text-sm font-medium text-foreground mb-2">Місто</label>
-                  <Select 
-                    value={city} 
-                    onValueChange={(value) => handleFilterChange(setCity, value)}
-                    disabled={!canUseFilters}
-                  >
-                    <SelectTrigger className="rounded-xl">
-                      <SelectValue placeholder="Оберіть місто" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Київ">Київ</SelectItem>
-                      <SelectItem value="Львів">Львів</SelectItem>
-                      <SelectItem value="Одеса">Одеса</SelectItem>
-                      <SelectItem value="Харків">Харків</SelectItem>
-                      <SelectItem value="Дніпро">Дніпро</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className={!canUseFilters ? 'opacity-60 cursor-not-allowed' : ''}>
+                        <label className="block text-sm font-medium text-foreground mb-2">Місто</label>
+                        <Select 
+                          value={city} 
+                          onValueChange={(value) => handleFilterChange(setCity, value)}
+                          disabled={!canUseFilters}
+                        >
+                          <SelectTrigger className="rounded-xl">
+                            <SelectValue placeholder="Оберіть місто" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Київ">Київ</SelectItem>
+                            <SelectItem value="Львів">Львів</SelectItem>
+                            <SelectItem value="Одеса">Одеса</SelectItem>
+                            <SelectItem value="Харків">Харків</SelectItem>
+                            <SelectItem value="Дніпро">Дніпро</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </TooltipTrigger>
+                    {!canUseFilters && (
+                      <TooltipContent className="bg-popover border-border">
+                        <p>🔒 Оновіться до преміум плану для використання фільтрів</p>
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                </TooltipProvider>
 
-                <div className={!canUseFilters ? 'opacity-60' : ''}>
-                  <label className="block text-sm font-medium text-foreground mb-2">Ціна (грн)</label>
-                  <div className="flex gap-2">
-                    <Input
-                      type="number"
-                      placeholder="Від"
-                      value={minPrice}
-                      onChange={(e) => handleFilterChange(setMinPrice, e.target.value)}
-                      className="rounded-xl"
-                      disabled={!canUseFilters}
-                    />
-                    <Input
-                      type="number"
-                      placeholder="До"
-                      value={maxPrice}
-                      onChange={(e) => handleFilterChange(setMaxPrice, e.target.value)}
-                      className="rounded-xl"
-                      disabled={!canUseFilters}
-                    />
-                  </div>
-                </div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className={!canUseFilters ? 'opacity-60 cursor-not-allowed' : ''}>
+                        <label className="block text-sm font-medium text-foreground mb-2">Ціна (грн)</label>
+                        <div className="flex gap-2">
+                          <Input
+                            type="number"
+                            placeholder="Від"
+                            value={minPrice}
+                            onChange={(e) => handleFilterChange(setMinPrice, e.target.value)}
+                            className="rounded-xl"
+                            disabled={!canUseFilters}
+                          />
+                          <Input
+                            type="number"
+                            placeholder="До"
+                            value={maxPrice}
+                            onChange={(e) => handleFilterChange(setMaxPrice, e.target.value)}
+                            className="rounded-xl"
+                            disabled={!canUseFilters}
+                          />
+                        </div>
+                      </div>
+                    </TooltipTrigger>
+                    {!canUseFilters && (
+                      <TooltipContent className="bg-popover border-border">
+                        <p>🔒 Оновіться до преміум плану для використання фільтрів</p>
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                </TooltipProvider>
 
-                <div className={!canUseFilters ? 'opacity-60' : ''}>
-                  <label className="block text-sm font-medium text-foreground mb-2">Кімнати</label>
-                  <Select 
-                    value={rooms} 
-                    onValueChange={(value) => handleFilterChange(setRooms, value)}
-                    disabled={!canUseFilters}
-                  >
-                    <SelectTrigger className="rounded-xl">
-                      <SelectValue placeholder="Кількість кімнат" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">1 кімната</SelectItem>
-                      <SelectItem value="2">2 кімнати</SelectItem>
-                      <SelectItem value="3">3 кімнати</SelectItem>
-                      <SelectItem value="4">4+ кімнати</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className={!canUseFilters ? 'opacity-60 cursor-not-allowed' : ''}>
+                        <label className="block text-sm font-medium text-foreground mb-2">Кімнати</label>
+                        <Select 
+                          value={rooms} 
+                          onValueChange={(value) => handleFilterChange(setRooms, value)}
+                          disabled={!canUseFilters}
+                        >
+                          <SelectTrigger className="rounded-xl">
+                            <SelectValue placeholder="Кількість кімнат" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">1 кімната</SelectItem>
+                            <SelectItem value="2">2 кімнати</SelectItem>
+                            <SelectItem value="3">3 кімнати</SelectItem>
+                            <SelectItem value="4">4+ кімнати</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </TooltipTrigger>
+                    {!canUseFilters && (
+                      <TooltipContent className="bg-popover border-border">
+                        <p>🔒 Оновіться до преміум плану для використання фільтрів</p>
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                </TooltipProvider>
 
-                <div className={!canUseFilters ? 'opacity-60' : ''}>
-                  <label className="block text-sm font-medium text-foreground mb-2">Тип нерухомості</label>
-                  <Select 
-                    value={propertyType} 
-                    onValueChange={(value) => handleFilterChange(setPropertyType, value)}
-                    disabled={!canUseFilters}
-                  >
-                    <SelectTrigger className="rounded-xl">
-                      <SelectValue placeholder="Оберіть тип" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="apartment">Квартира</SelectItem>
-                      <SelectItem value="house">Будинок</SelectItem>
-                      <SelectItem value="studio">Студія</SelectItem>
-                      <SelectItem value="room">Кімната</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className={!canUseFilters ? 'opacity-60 cursor-not-allowed' : ''}>
+                        <label className="block text-sm font-medium text-foreground mb-2">Тип нерухомості</label>
+                        <Select 
+                          value={propertyType} 
+                          onValueChange={(value) => handleFilterChange(setPropertyType, value)}
+                          disabled={!canUseFilters}
+                        >
+                          <SelectTrigger className="rounded-xl">
+                            <SelectValue placeholder="Оберіть тип" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="apartment">Квартира</SelectItem>
+                            <SelectItem value="house">Будинок</SelectItem>
+                            <SelectItem value="studio">Студія</SelectItem>
+                            <SelectItem value="room">Кімната</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </TooltipTrigger>
+                    {!canUseFilters && (
+                      <TooltipContent className="bg-popover border-border">
+                        <p>🔒 Оновіться до преміум плану для використання фільтрів</p>
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                </TooltipProvider>
 
                 <Button
                   variant="hero"
@@ -422,9 +467,9 @@ export default function Main() {
 
             {userPlan === 'basic' && (
               <div className="card-container p-4 mb-6 bg-accent/5 border border-accent/20">
-                <p className="text-sm text-foreground">
+                <p className="text-base text-foreground">
                   💡 У вас базовий план. Для використання фільтрів та перегляду всіх оголошень{' '}
-                  <Link to="/subscription" className="text-accent font-medium hover:underline">
+                  <Link to="/subscription" className="text-destructive font-bold hover:underline">
                     оберіть преміум план
                   </Link>
                 </p>
