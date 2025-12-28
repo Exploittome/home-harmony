@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useTheme } from '@/hooks/useTheme';
 import { Sun, Moon, LogOut, Search, MapPin, Home, Building2, Filter } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { User } from '@supabase/supabase-js';
 
 // Mock data for listings
 const mockListings = [
@@ -74,6 +76,9 @@ export default function Main() {
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   
+  // User state
+  const [user, setUser] = useState<User | null>(null);
+  
   // Filters
   const [city, setCity] = useState('');
   const [minPrice, setMinPrice] = useState('');
@@ -81,11 +86,28 @@ export default function Main() {
   const [rooms, setRooms] = useState('');
   const [propertyType, setPropertyType] = useState('');
 
-  // Mock user data - will be replaced with Supabase
-  const userEmail = 'user@example.com';
   const userPlan = 'basic'; // basic, 10days, 30days
 
-  const handleLogout = () => {
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+      if (!session?.user) {
+        navigate('/auth');
+      }
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      if (!session?.user) {
+        navigate('/auth');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     navigate('/');
   };
 
@@ -130,7 +152,7 @@ export default function Main() {
               {/* User Info */}
               <div className="mb-6 pb-6 border-b border-border">
                 <p className="text-sm text-muted-foreground mb-1">Ви увійшли як</p>
-                <p className="font-medium text-foreground truncate">{userEmail}</p>
+                <p className="font-medium text-foreground truncate">{user?.email || 'Завантаження...'}</p>
                 <div className="mt-3">
                   <span className="inline-flex items-center px-3 py-1 rounded-full bg-accent/10 text-accent text-sm font-medium">
                     {userPlan === 'basic' ? 'Базовий план' : userPlan === '10days' ? '10 днів' : '30 днів'}
