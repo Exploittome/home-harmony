@@ -39,7 +39,7 @@
 
     --border: 30 15% 88%;
     --input: 30 15% 88%;
-    --ring: 32 80% 55%;
+    --ring: 220 80% 55%;
 
     --radius: 1.5rem;
 
@@ -50,7 +50,7 @@
     --sidebar-accent: 30 15% 94%;
     --sidebar-accent-foreground: 30 30% 20%;
     --sidebar-border: 30 15% 88%;
-    --sidebar-ring: 32 80% 55%;
+    --sidebar-ring: 220 80% 55%;
 
     /* Custom tokens */
     --hero-gradient: linear-gradient(135deg, hsl(30 20% 98%) 0%, hsl(30 15% 94%) 100%);
@@ -77,24 +77,24 @@
     --muted: 20 8% 18%;
     --muted-foreground: 30 10% 60%;
 
-    --accent: 32 75% 55%;
-    --accent-foreground: 20 10% 8%;
+    --accent: 220 75% 55%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62.8% 50%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 20 8% 20%;
     --input: 20 8% 20%;
-    --ring: 32 75% 55%;
+    --ring: 220 75% 55%;
 
     --sidebar-background: 20 8% 10%;
     --sidebar-foreground: 30 15% 85%;
-    --sidebar-primary: 32 75% 55%;
-    --sidebar-primary-foreground: 20 10% 8%;
+    --sidebar-primary: 220 75% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 20 8% 16%;
     --sidebar-accent-foreground: 30 15% 92%;
     --sidebar-border: 20 8% 18%;
-    --sidebar-ring: 32 75% 55%;
+    --sidebar-ring: 220 75% 55%;
 
     --hero-gradient: linear-gradient(135deg, hsl(20 8% 14%) 0%, hsl(20 8% 10%) 100%);
     --card-shadow: 0 4px 40px -12px hsl(0 0% 0% / 0.4);
