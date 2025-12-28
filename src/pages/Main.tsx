@@ -4,74 +4,20 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useTheme } from '@/hooks/useTheme';
-import { Sun, Moon, LogOut, Search, MapPin, Home, Building2, Filter, Lock, MessageCircle, Bookmark } from 'lucide-react';
+import { Sun, Moon, LogOut, Search, MapPin, Home, Building2, Filter, Lock, Bookmark, BookmarkCheck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
 
-// Mock data for listings
-const mockListings = [
-  {
-    id: 1,
-    title: '2-кімнатна квартира в центрі',
-    price: 15000,
-    city: 'Київ',
-    rooms: 2,
-    type: 'apartment',
-    image: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=300&fit=crop',
-    description: 'Світла квартира з сучасним ремонтом у центрі міста.',
-  },
-  {
-    id: 2,
-    title: 'Студія біля метро',
-    price: 8000,
-    city: 'Київ',
-    rooms: 1,
-    type: 'studio',
-    image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop',
-    description: 'Затишна студія в 5 хвилинах від метро Лук\'янівська.',
-  },
-  {
-    id: 3,
-    title: '3-кімнатна квартира',
-    price: 22000,
-    city: 'Львів',
-    rooms: 3,
-    type: 'apartment',
-    image: 'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=400&h=300&fit=crop',
-    description: 'Простора квартира з видом на парк.',
-  },
-  {
-    id: 4,
-    title: 'Будинок з садом',
-    price: 35000,
-    city: 'Одеса',
-    rooms: 4,
-    type: 'house',
-    image: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop',
-    description: 'Приватний будинок з великим садом біля моря.',
-  },
-  {
-    id: 5,
-    title: '1-кімнатна квартира',
-    price: 10000,
-    city: 'Харків',
-    rooms: 1,
-    type: 'apartment',
-    image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=300&fit=crop',
-    description: 'Сучасна квартира в новобудові.',
-  },
-  {
-    id: 6,
-    title: 'Пентхаус з терасою',
-    price: 45000,
-    city: 'Київ',
-    rooms: 3,
-    type: 'apartment',
-    image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400&h=300&fit=crop',
-    description: 'Розкішний пентхаус з панорамним видом.',
-  },
-];
+interface Listing {
+  id: string;
+  title: string;
+  price: number;
+  city: string;
+  rooms: number | null;
+  image_url: string | null;
+  description: string | null;
+}
 
 type SubscriptionPlan = 'basic' | 'plan_10_days' | 'plan_30_days';
 
@@ -85,12 +31,44 @@ export default function Main() {
   const [userPlan, setUserPlan] = useState<SubscriptionPlan>('basic');
   const [planLoading, setPlanLoading] = useState(true);
   
+  // Listings state
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const [listingsLoading, setListingsLoading] = useState(true);
+  
   // Filters
   const [city, setCity] = useState('');
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const [rooms, setRooms] = useState('');
   const [propertyType, setPropertyType] = useState('');
+
+  // Fetch listings from database
+  const fetchListings = async () => {
+    const { data, error } = await supabase
+      .from('listings')
+      .select('id, title, price, city, rooms, image_url, description')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching listings:', error);
+    } else {
+      setListings(data as Listing[]);
+    }
+    setListingsLoading(false);
+  };
+
+  // Fetch saved listing IDs for current user
+  const fetchSavedIds = async (userId: string) => {
+    const { data, error } = await supabase
+      .from('saved_listings')
+      .select('listing_id')
+      .eq('user_id', userId);
+
+    if (!error && data) {
+      setSavedIds(new Set(data.map(item => item.listing_id)));
+    }
+  };
 
   // Fetch user subscription
   const fetchSubscription = async (userId: string) => {
@@ -115,6 +93,8 @@ export default function Main() {
   };
 
   useEffect(() => {
+    fetchListings();
+    
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
       if (!session?.user) {
@@ -122,6 +102,7 @@ export default function Main() {
       } else {
         setTimeout(() => {
           fetchSubscription(session.user.id);
+          fetchSavedIds(session.user.id);
         }, 0);
       }
     });
@@ -132,6 +113,7 @@ export default function Main() {
         navigate('/auth');
       } else {
         fetchSubscription(session.user.id);
+        fetchSavedIds(session.user.id);
       }
     });
 
@@ -157,13 +139,12 @@ export default function Main() {
     setter(value);
   };
 
-  const filteredListings = mockListings.filter((listing) => {
+  const filteredListings = listings.filter((listing) => {
     if (!canUseFilters) return true; // Show all for basic plan (no filtering)
     if (city && listing.city !== city) return false;
     if (minPrice && listing.price < parseInt(minPrice)) return false;
     if (maxPrice && listing.price > parseInt(maxPrice)) return false;
     if (rooms && listing.rooms !== parseInt(rooms)) return false;
-    if (propertyType && listing.type !== propertyType) return false;
     return true;
   });
 
@@ -180,6 +161,56 @@ export default function Main() {
 
   const openTelegramBot = () => {
     window.open('https://t.me/your_bot_name', '_blank');
+  };
+
+  const handleSaveListing = async (listingId: string) => {
+    if (!user) return;
+    
+    if (savedIds.has(listingId)) {
+      // Remove from saved
+      const { error } = await supabase
+        .from('saved_listings')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('listing_id', listingId);
+
+      if (error) {
+        toast({
+          title: "Помилка",
+          description: "Не вдалося видалити зі збережених",
+          variant: "destructive",
+        });
+      } else {
+        setSavedIds(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(listingId);
+          return newSet;
+        });
+        toast({
+          title: "Видалено",
+          description: "Оголошення видалено зі збережених",
+        });
+      }
+    } else {
+      // Add to saved
+      const { error } = await supabase
+        .from('saved_listings')
+        .insert({ user_id: user.id, listing_id: listingId });
+
+      if (error) {
+        toast({
+          title: "Помилка",
+          description: "Не вдалося зберегти оголошення",
+          variant: "destructive",
+        });
+      } else {
+        setSavedIds(prev => new Set(prev).add(listingId));
+        toast({
+          title: "Збережено",
+          description: "Оголошення додано до збережених",
+        });
+      }
+    }
   };
 
   return (
@@ -392,43 +423,65 @@ export default function Main() {
               </div>
             )}
 
-            <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {displayedListings.map((listing) => (
-                <div key={listing.id} className="card-container-hover overflow-hidden">
-                  <div className="relative aspect-[4/3]">
-                    <img
-                      src={listing.image}
-                      alt={listing.title}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-background/90 backdrop-blur-sm text-foreground font-semibold text-sm">
-                      {listing.price.toLocaleString()} ₴/міс
+            {listingsLoading ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">Завантаження оголошень...</p>
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {displayedListings.map((listing) => (
+                  <div key={listing.id} className="card-container-hover overflow-hidden">
+                    <div className="relative aspect-[4/3]">
+                      <img
+                        src={listing.image_url || 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=300&fit=crop'}
+                        alt={listing.title}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-background/90 backdrop-blur-sm text-foreground font-semibold text-sm">
+                        {listing.price.toLocaleString()} ₴/міс
+                      </div>
+                      {userPlan === 'plan_30_days' && (
+                        <button
+                          onClick={() => handleSaveListing(listing.id)}
+                          className="absolute top-3 left-3 p-2 rounded-full bg-background/90 backdrop-blur-sm hover:bg-background transition-colors"
+                        >
+                          {savedIds.has(listing.id) ? (
+                            <BookmarkCheck className="w-5 h-5 text-accent" />
+                          ) : (
+                            <Bookmark className="w-5 h-5 text-foreground" />
+                          )}
+                        </button>
+                      )}
+                    </div>
+                    <div className="p-5">
+                      <h3 className="font-display text-lg font-semibold text-foreground mb-2">
+                        {listing.title}
+                      </h3>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
+                        <span className="flex items-center gap-1">
+                          <MapPin className="w-4 h-4" />
+                          {listing.city}
+                        </span>
+                        {listing.rooms && (
+                          <span className="flex items-center gap-1">
+                            <Home className="w-4 h-4" />
+                            {listing.rooms} кім.
+                          </span>
+                        )}
+                      </div>
+                      {listing.description && (
+                        <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                          {listing.description}
+                        </p>
+                      )}
+                      <Button variant="outline" size="sm" className="w-full rounded-xl">
+                        Детальніше
+                      </Button>
                     </div>
                   </div>
-                  <div className="p-5">
-                    <h3 className="font-display text-lg font-semibold text-foreground mb-2">
-                      {listing.title}
-                    </h3>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
-                      <span className="flex items-center gap-1">
-                        <MapPin className="w-4 h-4" />
-                        {listing.city}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Home className="w-4 h-4" />
-                        {listing.rooms} кім.
-                      </span>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                      {listing.description}
-                    </p>
-                    <Button variant="outline" size="sm" className="w-full rounded-xl">
-                      Детальніше
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
 
             {displayedListings.length === 0 && (
               <div className="card-container p-12 text-center">
