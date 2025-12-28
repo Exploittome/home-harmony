@@ -20,6 +20,7 @@ interface Listing {
   has_parking: boolean | null;
   phone: string | null;
   image_url: string | null;
+  images: string[] | null;
   description: string | null;
   created_at: string;
 }
@@ -41,6 +42,7 @@ export default function Main() {
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [listingsLoading, setListingsLoading] = useState(true);
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
   // Filters
   const [city, setCity] = useState('');
@@ -53,7 +55,7 @@ export default function Main() {
   const fetchListings = async () => {
     const { data, error } = await supabase
       .from('listings')
-      .select('id, title, price, city, rooms, area, has_parking, phone, image_url, description, created_at')
+      .select('id, title, price, city, rooms, area, has_parking, phone, image_url, images, description, created_at')
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -484,7 +486,10 @@ export default function Main() {
                         variant="outline" 
                         size="sm" 
                         className="w-full rounded-xl"
-                        onClick={() => setSelectedListing(listing)}
+                        onClick={() => {
+                          setSelectedListing(listing);
+                          setCurrentImageIndex(0);
+                        }}
                       >
                         Детальніше
                       </Button>
@@ -495,17 +500,53 @@ export default function Main() {
             )}
 
             {/* Listing Detail Modal */}
-            <Dialog open={!!selectedListing} onOpenChange={(open) => !open && setSelectedListing(null)}>
+            <Dialog open={!!selectedListing} onOpenChange={(open) => {
+              if (!open) {
+                setSelectedListing(null);
+                setCurrentImageIndex(0);
+              }
+            }}>
               <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0">
-                {selectedListing && (
+                {selectedListing && (() => {
+                  const allImages = selectedListing.images?.length 
+                    ? selectedListing.images 
+                    : [selectedListing.image_url || 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1200&h=800&fit=crop'];
+                  
+                  return (
                   <div className="flex flex-col">
-                    {/* Image Viewer */}
+                    {/* Image Carousel */}
                     <div className="relative aspect-[16/10] bg-muted">
                       <img
-                        src={selectedListing.image_url || 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1200&h=800&fit=crop'}
-                        alt={selectedListing.title}
-                        className="w-full h-full object-cover"
+                        src={allImages[currentImageIndex]}
+                        alt={`${selectedListing.title} - фото ${currentImageIndex + 1}`}
+                        className="w-full h-full object-cover transition-opacity duration-300"
                       />
+                      
+                      {/* Navigation arrows */}
+                      {allImages.length > 1 && (
+                        <>
+                          <button
+                            onClick={() => setCurrentImageIndex(prev => prev === 0 ? allImages.length - 1 : prev - 1)}
+                            className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-background/90 backdrop-blur-sm hover:bg-background transition-colors"
+                          >
+                            <ChevronLeft className="w-6 h-6 text-foreground" />
+                          </button>
+                          <button
+                            onClick={() => setCurrentImageIndex(prev => prev === allImages.length - 1 ? 0 : prev + 1)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-background/90 backdrop-blur-sm hover:bg-background transition-colors"
+                          >
+                            <ChevronRight className="w-6 h-6 text-foreground" />
+                          </button>
+                        </>
+                      )}
+                      
+                      {/* Image counter */}
+                      {allImages.length > 1 && (
+                        <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-background/90 backdrop-blur-sm text-sm font-medium text-foreground">
+                          {currentImageIndex + 1} / {allImages.length}
+                        </div>
+                      )}
+                      
                       {/* Image overlay with price */}
                       <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between">
                         <div className="px-4 py-2 rounded-xl bg-background/95 backdrop-blur-sm">
@@ -535,6 +576,25 @@ export default function Main() {
                         )}
                       </div>
                     </div>
+                    
+                    {/* Thumbnail strip */}
+                    {allImages.length > 1 && (
+                      <div className="flex gap-2 p-3 bg-muted/50 overflow-x-auto">
+                        {allImages.map((img, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => setCurrentImageIndex(idx)}
+                            className={`flex-shrink-0 w-16 h-12 rounded-lg overflow-hidden border-2 transition-all ${
+                              idx === currentImageIndex 
+                                ? 'border-accent ring-2 ring-accent/20' 
+                                : 'border-transparent opacity-60 hover:opacity-100'
+                            }`}
+                          >
+                            <img src={img} alt={`Мініатюра ${idx + 1}`} className="w-full h-full object-cover" />
+                          </button>
+                        ))}
+                      </div>
+                    )}
 
                     {/* Content */}
                     <div className="p-6 space-y-6">
@@ -665,7 +725,8 @@ export default function Main() {
                       </div>
                     </div>
                   </div>
-                )}
+                  );
+                })()}
               </DialogContent>
             </Dialog>
 
