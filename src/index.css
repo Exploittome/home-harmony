@@ -5,6 +5,7 @@
 @import "@fontsource/inter/400.css";
 @import "@fontsource/inter/500.css";
 @import "@fontsource/inter/600.css";
+@import url("https://fonts.googleapis.com/css2?family=Inter&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -30,7 +31,7 @@
     --muted: 30 10% 92%;
     --muted-foreground: 30 5% 45%;
 
-    --accent: 32 80% 55%;
+    --accent: 250 98% 57%;
     --accent-foreground: 30 20% 98%;
 
     --destructive: 0 84.2% 60.2%;
