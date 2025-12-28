@@ -193,11 +193,11 @@ export default function Main() {
           </Link>
 
           <div className="flex items-center gap-3">
-            {userPlan === 'plan_30_days' && (
+            {!planLoading && userPlan === 'plan_30_days' && (
               <Button 
                 variant="default" 
                 onClick={openTelegramBot}
-                className="rounded-full bg-accent hover:bg-accent/90"
+                className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground"
               >
                 <MessageCircle className="h-5 w-5 mr-2" />
                 Telegram бот
