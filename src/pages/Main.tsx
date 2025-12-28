@@ -3,8 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useTheme } from '@/hooks/useTheme';
-import { Sun, Moon, LogOut, Search, MapPin, Home, Building2, Filter, Lock, Bookmark, BookmarkCheck } from 'lucide-react';
+import { Sun, Moon, LogOut, Search, MapPin, Home, Building2, Filter, Lock, Bookmark, BookmarkCheck, X, Maximize2, Car } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
@@ -15,8 +16,11 @@ interface Listing {
   price: number;
   city: string;
   rooms: number | null;
+  area: number | null;
+  has_parking: boolean | null;
   image_url: string | null;
   description: string | null;
+  created_at: string;
 }
 
 type SubscriptionPlan = 'basic' | 'plan_10_days' | 'plan_30_days';
@@ -35,6 +39,7 @@ export default function Main() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [listingsLoading, setListingsLoading] = useState(true);
+  const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   
   // Filters
   const [city, setCity] = useState('');
@@ -47,7 +52,7 @@ export default function Main() {
   const fetchListings = async () => {
     const { data, error } = await supabase
       .from('listings')
-      .select('id, title, price, city, rooms, image_url, description')
+      .select('id, title, price, city, rooms, area, has_parking, image_url, description, created_at')
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -474,7 +479,12 @@ export default function Main() {
                           {listing.description}
                         </p>
                       )}
-                      <Button variant="outline" size="sm" className="w-full rounded-xl">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full rounded-xl"
+                        onClick={() => setSelectedListing(listing)}
+                      >
                         Детальніше
                       </Button>
                     </div>
@@ -482,6 +492,104 @@ export default function Main() {
                 ))}
               </div>
             )}
+
+            {/* Listing Detail Modal */}
+            <Dialog open={!!selectedListing} onOpenChange={(open) => !open && setSelectedListing(null)}>
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                {selectedListing && (
+                  <>
+                    <DialogHeader>
+                      <DialogTitle className="font-display text-xl">
+                        {selectedListing.title}
+                      </DialogTitle>
+                    </DialogHeader>
+                    
+                    <div className="space-y-6">
+                      {/* Image */}
+                      <div className="relative aspect-video rounded-xl overflow-hidden">
+                        <img
+                          src={selectedListing.image_url || 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop'}
+                          alt={selectedListing.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+
+                      {/* Price */}
+                      <div className="flex items-center justify-between">
+                        <span className="text-2xl font-bold text-accent">
+                          {selectedListing.price.toLocaleString()} ₴/міс
+                        </span>
+                        {userPlan === 'plan_30_days' && (
+                          <Button
+                            variant={savedIds.has(selectedListing.id) ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => handleSaveListing(selectedListing.id)}
+                            className="rounded-xl"
+                          >
+                            {savedIds.has(selectedListing.id) ? (
+                              <>
+                                <BookmarkCheck className="w-4 h-4 mr-2" />
+                                Збережено
+                              </>
+                            ) : (
+                              <>
+                                <Bookmark className="w-4 h-4 mr-2" />
+                                Зберегти
+                              </>
+                            )}
+                          </Button>
+                        )}
+                      </div>
+
+                      {/* Details Grid */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        <div className="card-container p-4 text-center">
+                          <MapPin className="w-5 h-5 mx-auto mb-2 text-muted-foreground" />
+                          <p className="text-sm text-muted-foreground">Місто</p>
+                          <p className="font-semibold text-foreground">{selectedListing.city}</p>
+                        </div>
+                        {selectedListing.rooms && (
+                          <div className="card-container p-4 text-center">
+                            <Home className="w-5 h-5 mx-auto mb-2 text-muted-foreground" />
+                            <p className="text-sm text-muted-foreground">Кімнат</p>
+                            <p className="font-semibold text-foreground">{selectedListing.rooms}</p>
+                          </div>
+                        )}
+                        {selectedListing.area && (
+                          <div className="card-container p-4 text-center">
+                            <Maximize2 className="w-5 h-5 mx-auto mb-2 text-muted-foreground" />
+                            <p className="text-sm text-muted-foreground">Площа</p>
+                            <p className="font-semibold text-foreground">{selectedListing.area} м²</p>
+                          </div>
+                        )}
+                        {selectedListing.has_parking && (
+                          <div className="card-container p-4 text-center">
+                            <Car className="w-5 h-5 mx-auto mb-2 text-muted-foreground" />
+                            <p className="text-sm text-muted-foreground">Паркінг</p>
+                            <p className="font-semibold text-foreground">Є</p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Description */}
+                      {selectedListing.description && (
+                        <div>
+                          <h4 className="font-semibold text-foreground mb-2">Опис</h4>
+                          <p className="text-muted-foreground whitespace-pre-wrap">
+                            {selectedListing.description}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Date */}
+                      <p className="text-sm text-muted-foreground">
+                        Опубліковано: {new Date(selectedListing.created_at).toLocaleDateString('uk-UA')}
+                      </p>
+                    </div>
+                  </>
+                )}
+              </DialogContent>
+            </Dialog>
 
             {displayedListings.length === 0 && (
               <div className="card-container p-12 text-center">
