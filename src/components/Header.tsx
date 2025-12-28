@@ -23,10 +23,8 @@ export function Header() {
           <nav className="flex items-center justify-between">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center">
-                <span className="text-accent-foreground font-bold text-lg">Р</span>
-              </div>
-              <span className="font-display text-xl font-semibold text-foreground">Рентал</span>
+              <img src="/images/logo.png" alt="GOTOHOME" className="w-10 h-10 object-contain" />
+              <span className="font-display text-xl font-semibold text-foreground">GOTOHOME</span>
             </Link>
 
             {/* Desktop Navigation */}
