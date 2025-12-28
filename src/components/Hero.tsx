@@ -29,9 +29,6 @@ export function Hero() {
                   <Link to="/auth?mode=register">Почати пошук</Link>
                 </Button>
                 <div className="flex items-center gap-3">
-                  <div className="flex -space-x-2">
-                    {[1, 2, 3].map(i => {})}
-                  </div>
                   <span className="text-sm text-muted-foreground">1000+ активних оголошень</span>
                 </div>
               </div>
