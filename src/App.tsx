@@ -23,8 +23,12 @@ const RecoveryRedirect = () => {
     const hashParams = new URLSearchParams(location.hash.slice(1));
     const searchParams = new URLSearchParams(location.search);
 
-    const isRecovery =
-      hashParams.get("type") === "recovery" || searchParams.get("type") === "recovery";
+    // Check for recovery in hash, search params, or PKCE code
+    const isRecoveryHash = hashParams.get("type") === "recovery";
+    const isRecoverySearch = searchParams.get("type") === "recovery";
+    const hasCode = searchParams.has("code"); // PKCE flow uses code param
+
+    const isRecovery = isRecoveryHash || isRecoverySearch || hasCode;
 
     if (!isRecovery) return;
 
@@ -33,6 +37,10 @@ const RecoveryRedirect = () => {
     if (location.pathname !== "/auth" || !hasResetMode) {
       const nextSearch = new URLSearchParams(location.search);
       nextSearch.set("mode", "reset-password");
+      // Preserve type if present
+      if (isRecoveryHash || isRecoverySearch) {
+        nextSearch.set("type", "recovery");
+      }
 
       navigate(
         {
