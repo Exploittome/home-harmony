@@ -592,6 +592,19 @@ export default function Main() {
               </div>
             )}
 
+            {userPlan === 'plan_10_days' && (
+              <div className="card-container p-4 mb-6 bg-red-500/5 border border-red-500/30">
+                <p className="text-base font-medium">
+                  <span className="text-primary">💡 У вас </span>
+                  <span className="text-red-600 dark:text-red-400 font-bold">Smart</span>
+                  <span className="text-primary"> план. Для використання фільтрів та перегляду всіх оголошень оберіть преміум план </span>
+                  <Link to="/subscription" className="text-yellow-600 dark:text-yellow-400 font-bold hover:underline">
+                    Pro
+                  </Link>
+                </p>
+              </div>
+            )}
+
             {listingsLoading ? (
               <div className="text-center py-12">
                 <p className="text-muted-foreground">Завантаження оголошень...</p>
