@@ -869,9 +869,6 @@ export default function Main() {
               return (
                 <div 
                   className="fixed inset-0 z-[200] bg-black flex items-center justify-center md:hidden"
-                  onTouchStart={handleTouchStart}
-                  onTouchMove={handleTouchMove}
-                  onTouchEnd={() => handleTouchEnd(allImages)}
                 >
                   <img
                     src={allImages[currentImageIndex]}
@@ -879,32 +876,25 @@ export default function Main() {
                     className="max-w-full max-h-full object-contain pointer-events-none select-none"
                   />
                   
-                  {/* Close button */}
+                  {/* Close button - more prominent */}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       setIsFullscreenImage(false);
                     }}
-                    className="absolute top-4 right-4 p-3 rounded-full bg-white text-black shadow-lg z-10"
+                    className="absolute top-4 right-4 p-4 rounded-full bg-red-500 text-white shadow-2xl z-10 border-4 border-white active:bg-red-600"
                   >
-                    <X className="w-6 h-6" />
+                    <X className="w-8 h-8" strokeWidth={3} />
                   </button>
                   
                   {/* Image counter */}
                   {allImages.length > 1 && (
-                    <div className="absolute top-4 left-4 px-4 py-2 rounded-full bg-white/90 text-black text-sm font-bold">
+                    <div className="absolute top-4 left-4 px-4 py-2 rounded-full bg-white text-black text-base font-bold shadow-lg">
                       {currentImageIndex + 1} / {allImages.length}
                     </div>
                   )}
                   
-                  {/* Swipe hint */}
-                  {allImages.length > 1 && (
-                    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-white/80 text-black text-sm">
-                      ← Свайп для перегляду →
-                    </div>
-                  )}
-                  
-                  {/* Navigation arrows for fullscreen */}
+                  {/* Navigation arrows for fullscreen - main controls */}
                   {allImages.length > 1 && (
                     <>
                       <button
@@ -912,18 +902,18 @@ export default function Main() {
                           e.stopPropagation();
                           goToPrevImage(allImages);
                         }}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 p-4 rounded-full bg-white/90 text-black shadow-lg z-10 active:bg-white"
+                        className="absolute left-2 top-1/2 -translate-y-1/2 p-4 rounded-full bg-white text-black shadow-2xl z-10 active:bg-gray-200 border-2 border-gray-300"
                       >
-                        <ChevronLeft className="w-8 h-8" />
+                        <ChevronLeft className="w-10 h-10" strokeWidth={3} />
                       </button>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           goToNextImage(allImages);
                         }}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 p-4 rounded-full bg-white/90 text-black shadow-lg z-10 active:bg-white"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 p-4 rounded-full bg-white text-black shadow-2xl z-10 active:bg-gray-200 border-2 border-gray-300"
                       >
-                        <ChevronRight className="w-8 h-8" />
+                        <ChevronRight className="w-10 h-10" strokeWidth={3} />
                       </button>
                     </>
                   )}
