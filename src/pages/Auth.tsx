@@ -19,8 +19,50 @@ export default function Auth() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
 
   const isLogin = mode === 'login';
+  const isForgotPassword = mode === 'forgot-password';
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email.trim()) {
+      toast({
+        title: 'Помилка',
+        description: 'Будь ласка, введіть email',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setResetLoading(true);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${window.location.origin}/auth?mode=login`,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: 'Лист надіслано!',
+        description: 'Перевірте вашу пошту для відновлення пароля.',
+      });
+      
+      navigate('/auth?mode=login');
+    } catch (error: any) {
+      toast({
+        title: 'Помилка',
+        description: error.message || 'Не вдалося надіслати лист',
+        variant: 'destructive',
+      });
+    } finally {
+      setResetLoading(false);
+    }
+  };
 
   // Check if user is already logged in
   useEffect(() => {
@@ -154,15 +196,17 @@ export default function Auth() {
           </div>
 
           <h1 className="font-display text-3xl font-semibold text-foreground mb-2">
-            {isLogin ? 'Вхід' : 'Реєстрація'}
+            {isForgotPassword ? 'Відновлення пароля' : isLogin ? 'Вхід' : 'Реєстрація'}
           </h1>
           <p className="text-muted-foreground mb-8">
-            {isLogin
+            {isForgotPassword
+              ? 'Введіть ваш email для відновлення пароля'
+              : isLogin
               ? 'Увійдіть, щоб отримати доступ до оголошень'
               : 'Створіть акаунт, щоб почати пошук житла'}
           </p>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={isForgotPassword ? handleForgotPassword : handleSubmit} className="space-y-5">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
                 Email
@@ -178,31 +222,44 @@ export default function Auth() {
               />
             </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-foreground mb-2">
-                Пароль
-              </label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="rounded-xl h-12 pr-12"
-                  maxLength={128}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
+            {!isForgotPassword && (
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-foreground mb-2">
+                  Пароль
+                </label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="rounded-xl h-12 pr-12"
+                    maxLength={128}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
-            {!isLogin && (
+            {isLogin && (
+              <div className="text-right">
+                <Link
+                  to="/auth?mode=forgot-password"
+                  className="text-sm text-accent hover:underline"
+                >
+                  Забули пароль?
+                </Link>
+              </div>
+            )}
+
+            {!isLogin && !isForgotPassword && (
               <div>
                 <label htmlFor="confirmPassword" className="block text-sm font-medium text-foreground mb-2">
                   Підтвердіть пароль
@@ -224,10 +281,12 @@ export default function Auth() {
               variant="hero"
               size="lg"
               className="w-full mt-6"
-              disabled={loading}
+              disabled={loading || resetLoading}
             >
-              {loading
+              {loading || resetLoading
                 ? 'Завантаження...'
+                : isForgotPassword
+                ? 'Надіслати лист'
                 : isLogin
                 ? 'Увійти'
                 : 'Зареєструватися'}
@@ -235,7 +294,17 @@ export default function Auth() {
           </form>
 
           <p className="text-center text-muted-foreground mt-6">
-            {isLogin ? (
+            {isForgotPassword ? (
+              <>
+                Згадали пароль?{' '}
+                <Link
+                  to="/auth?mode=login"
+                  className="text-accent hover:underline font-medium"
+                >
+                  Увійти
+                </Link>
+              </>
+            ) : isLogin ? (
               <>
                 Немає акаунту?{' '}
                 <Link
