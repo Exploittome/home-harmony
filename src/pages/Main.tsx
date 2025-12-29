@@ -184,14 +184,19 @@ export default function Main() {
   }, [navigate]);
 
   const handleLogout = async () => {
+    // Clear local session even if server-side session is already gone
+    await supabase.auth.signOut({ scope: 'local' });
+
+    // Extra safety: remove any persisted tokens manually
     try {
-      await supabase.auth.signOut();
-    } catch (e) {
-      console.log('Logout error (ignoring):', e);
+      localStorage.removeItem('sb-qselmijdcggthggjvdej-auth-token');
+      localStorage.removeItem('sb-qselmijdcggthggjvdej-auth-token-code-verifier');
+    } catch {
+      // ignore
     }
-    // Force clear user state and redirect regardless of signOut result
+
     setUser(null);
-    navigate('/');
+    navigate('/', { replace: true });
   };
 
   const canUseFilters = userPlan === 'plan_10_days' || userPlan === 'plan_30_days';
