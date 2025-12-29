@@ -41,13 +41,14 @@ export default function Auth() {
       const hashParams = new URLSearchParams(window.location.hash.slice(1));
       const search = new URLSearchParams(window.location.search);
 
-      // Recovery via hash tokens (common for password reset)
-      if (hashParams.get('type') === 'recovery') {
+      // Recovery via tokens (hash OR querystring)
+      const recoveryType = hashParams.get('type') || search.get('type');
+      const access_token = hashParams.get('access_token') || search.get('access_token');
+      const refresh_token = hashParams.get('refresh_token') || search.get('refresh_token');
+
+      if (recoveryType === 'recovery') {
         recoveryInitRef.current = true;
         setIsRecoveryMode(true);
-
-        const access_token = hashParams.get('access_token');
-        const refresh_token = hashParams.get('refresh_token');
 
         if (access_token && refresh_token) {
           const { error } = await supabase.auth.setSession({ access_token, refresh_token });
@@ -58,8 +59,8 @@ export default function Auth() {
               variant: 'destructive',
             });
           }
+          return;
         }
-        return;
       }
 
       // Recovery via PKCE code (some setups)
