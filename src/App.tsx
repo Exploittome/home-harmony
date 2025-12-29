@@ -21,10 +21,18 @@ const RecoveryRedirect = () => {
 
   useEffect(() => {
     const hashParams = new URLSearchParams(location.hash.slice(1));
-    if (hashParams.get("type") === "recovery" && location.pathname !== "/auth") {
-      navigate(`/auth?mode=reset-password${location.hash}`, { replace: true });
+    if (hashParams.get("type") !== "recovery") return;
+
+    const searchParams = new URLSearchParams(location.search);
+    const hasResetMode = searchParams.get("mode") === "reset-password";
+
+    if (location.pathname !== "/auth" || !hasResetMode) {
+      navigate(
+        { pathname: "/auth", search: "?mode=reset-password", hash: location.hash },
+        { replace: true }
+      );
     }
-  }, [location.hash, location.pathname, navigate]);
+  }, [location.hash, location.pathname, location.search, navigate]);
 
   return null;
 };
