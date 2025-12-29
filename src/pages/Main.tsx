@@ -184,7 +184,13 @@ export default function Main() {
   }, [navigate]);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch (e) {
+      console.log('Logout error (ignoring):', e);
+    }
+    // Force clear user state and redirect regardless of signOut result
+    setUser(null);
     navigate('/');
   };
 

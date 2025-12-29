@@ -90,8 +90,8 @@ export default function Auth() {
         return;
       }
 
-      const shouldRedirectToMain = (mode === 'login' || mode === 'register') && !!session?.user;
-      if (shouldRedirectToMain) {
+      // Only redirect on actual login/signup events, not on initial load
+      if (event === 'SIGNED_IN' && (mode === 'login' || mode === 'register') && session?.user) {
         navigate('/main');
       }
     });
