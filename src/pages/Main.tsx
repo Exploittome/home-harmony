@@ -318,7 +318,11 @@ export default function Main() {
                 <p className="text-sm text-muted-foreground mb-1">Ви увійшли як</p>
                 <p className="font-medium text-foreground truncate">{user?.email || 'Завантаження...'}</p>
                 <div className="mt-3">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full bg-accent/10 text-accent text-sm font-medium">
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-bold ${
+                    userPlan === 'basic' 
+                      ? 'bg-green-500/10 text-green-600 dark:text-green-400' 
+                      : 'bg-accent/10 text-accent'
+                  }`}>
                     {planLoading ? 'Завантаження...' : getPlanLabel(userPlan)}
                   </span>
                 </div>
@@ -576,9 +580,9 @@ export default function Main() {
             </div>
 
             {userPlan === 'basic' && (
-              <div className="card-container p-4 mb-6 bg-destructive/10 border border-destructive/30">
-                <p className="text-base text-destructive font-medium">
-                  💡 У вас базовий план. Для використання фільтрів та перегляду всіх оголошень{' '}
+              <div className="card-container p-4 mb-6 bg-primary/5 border border-primary/30">
+                <p className="text-base font-medium">
+                  <span className="text-primary">💡 У вас базовий план. Для використання фільтрів та перегляду всіх оголошень </span>
                   <Link to="/subscription" className="text-destructive font-bold hover:underline">
                     оберіть преміум план
                   </Link>
