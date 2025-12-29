@@ -3,6 +3,7 @@ import { Sun, Moon, Menu, X } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/useTheme';
+import logo from '@/assets/logo-2.png';
 
 export function Header() {
   const { theme, toggleTheme } = useTheme();
@@ -23,7 +24,7 @@ export function Header() {
           <nav className="flex items-center justify-between">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-3">
-              <img src="/images/logo.png" alt="GOTOHOME" className="w-10 h-10 object-contain" />
+              <img src={logo} alt="GOTOHOME" className="w-10 h-10 object-contain" />
               <span className="font-display text-xl font-semibold text-foreground">GOTOHOME</span>
             </Link>
 
