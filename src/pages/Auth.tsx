@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +21,7 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const [isRecoveryMode, setIsRecoveryMode] = useState(false);
+  const recoveryInitRef = useRef(false);
 
   const isLogin = mode === 'login';
   const isForgotPassword = mode === 'forgot-password';
@@ -28,44 +29,87 @@ export default function Auth() {
 
   // Check for password recovery event
   useEffect(() => {
-    const hasRecoveryHash = () => {
+    const isRecoveryUrl = () => {
       const hashParams = new URLSearchParams(window.location.hash.slice(1));
-      return hashParams.get('type') === 'recovery';
+      const search = new URLSearchParams(window.location.search);
+      return hashParams.get('type') === 'recovery' || search.get('type') === 'recovery';
     };
 
-    // If user landed with a recovery hash (even on /auth without mode), force reset mode
-    if (hasRecoveryHash()) {
-      setIsRecoveryMode(true);
-    }
+    const initRecoverySession = async () => {
+      if (recoveryInitRef.current) return;
+
+      const hashParams = new URLSearchParams(window.location.hash.slice(1));
+      const search = new URLSearchParams(window.location.search);
+
+      // Recovery via hash tokens (common for password reset)
+      if (hashParams.get('type') === 'recovery') {
+        recoveryInitRef.current = true;
+        setIsRecoveryMode(true);
+
+        const access_token = hashParams.get('access_token');
+        const refresh_token = hashParams.get('refresh_token');
+
+        if (access_token && refresh_token) {
+          const { error } = await supabase.auth.setSession({ access_token, refresh_token });
+          if (error) {
+            toast({
+              title: 'Помилка',
+              description: 'Посилання для відновлення недійсне або протерміноване. Спробуйте ще раз.',
+              variant: 'destructive',
+            });
+          }
+        }
+        return;
+      }
+
+      // Recovery via PKCE code (some setups)
+      const code = search.get('code');
+      if (code) {
+        recoveryInitRef.current = true;
+        setIsRecoveryMode(true);
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (error) {
+          toast({
+            title: 'Помилка',
+            description: 'Не вдалося відкрити сесію для відновлення пароля. Спробуйте ще раз.',
+            variant: 'destructive',
+          });
+        }
+      }
+    };
+
+    // Important: run once on page load
+    void initRecoverySession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      const recovery = hasRecoveryHash() || mode === 'reset-password';
+      const recovery = isRecoveryUrl() || mode === 'reset-password';
 
       if (event === 'PASSWORD_RECOVERY' || recovery) {
         setIsRecoveryMode(true);
         return;
       }
 
-      if (session?.user) {
+      const shouldRedirectToMain = (mode === 'login' || mode === 'register') && !!session?.user;
+      if (shouldRedirectToMain) {
         navigate('/main');
       }
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      const recovery = hasRecoveryHash() || mode === 'reset-password';
+      const recovery = isRecoveryUrl() || mode === 'reset-password';
+      const shouldRedirectToMain = (mode === 'login' || mode === 'register') && !!session?.user && !recovery;
 
-      if (session?.user && recovery) {
-        setIsRecoveryMode(true);
-        return;
+      if (shouldRedirectToMain) {
+        navigate('/main');
       }
 
-      if (session?.user && !recovery) {
-        navigate('/main');
+      if (recovery) {
+        setIsRecoveryMode(true);
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate, mode]);
+  }, [navigate, mode, toast]);
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
