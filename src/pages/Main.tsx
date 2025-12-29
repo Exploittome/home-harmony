@@ -47,22 +47,31 @@ export default function Main() {
   const [isFullscreenImage, setIsFullscreenImage] = useState(false);
   
   // Touch swipe handling
-  const touchStartX = useRef<number>(0);
-  const touchEndX = useRef<number>(0);
+  const touchStartX = useRef<number | null>(null);
+  const touchEndX = useRef<number | null>(null);
+  const isSwiping = useRef<boolean>(false);
   
   const handleTouchStart = (e: TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
+    touchEndX.current = e.touches[0].clientX;
+    isSwiping.current = true;
   };
   
   const handleTouchMove = (e: TouchEvent) => {
-    touchEndX.current = e.touches[0].clientX;
+    if (isSwiping.current) {
+      touchEndX.current = e.touches[0].clientX;
+    }
   };
   
   const handleTouchEnd = (allImages: string[]) => {
+    if (!isSwiping.current || touchStartX.current === null || touchEndX.current === null) {
+      return;
+    }
+    
     const diff = touchStartX.current - touchEndX.current;
     const threshold = 50;
     
-    if (Math.abs(diff) > threshold) {
+    if (Math.abs(diff) > threshold && allImages.length > 1) {
       if (diff > 0) {
         // Swipe left - next image
         setCurrentImageIndex(prev => prev === allImages.length - 1 ? 0 : prev + 1);
@@ -71,8 +80,23 @@ export default function Main() {
         setCurrentImageIndex(prev => prev === 0 ? allImages.length - 1 : prev - 1);
       }
     }
-    touchStartX.current = 0;
-    touchEndX.current = 0;
+    
+    touchStartX.current = null;
+    touchEndX.current = null;
+    isSwiping.current = false;
+  };
+  
+  // Navigation functions for fullscreen
+  const goToNextImage = (allImages: string[]) => {
+    if (allImages.length > 1) {
+      setCurrentImageIndex(prev => prev === allImages.length - 1 ? 0 : prev + 1);
+    }
+  };
+  
+  const goToPrevImage = (allImages: string[]) => {
+    if (allImages.length > 1) {
+      setCurrentImageIndex(prev => prev === 0 ? allImages.length - 1 : prev - 1);
+    }
   };
   
   // Filters
@@ -826,73 +850,75 @@ export default function Main() {
             </Dialog>
 
             {/* Fullscreen Image Modal for Mobile */}
-            {isFullscreenImage && selectedListing && (
-              <div 
-                className="fixed inset-0 z-[200] bg-black flex items-center justify-center md:hidden"
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={() => {
-                  const allImages = selectedListing.images?.length 
-                    ? selectedListing.images 
-                    : [selectedListing.image_url || 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1200&h=800&fit=crop'];
-                  handleTouchEnd(allImages);
-                }}
-              >
-                {(() => {
-                  const allImages = selectedListing.images?.length 
-                    ? selectedListing.images 
-                    : [selectedListing.image_url || 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1200&h=800&fit=crop'];
+            {isFullscreenImage && selectedListing && (() => {
+              const allImages = selectedListing.images?.length 
+                ? selectedListing.images 
+                : [selectedListing.image_url || 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1200&h=800&fit=crop'];
+              
+              return (
+                <div 
+                  className="fixed inset-0 z-[200] bg-black flex items-center justify-center md:hidden"
+                  onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={() => handleTouchEnd(allImages)}
+                >
+                  <img
+                    src={allImages[currentImageIndex]}
+                    alt={`${selectedListing.title} - фото ${currentImageIndex + 1}`}
+                    className="max-w-full max-h-full object-contain pointer-events-none select-none"
+                  />
                   
-                  return (
+                  {/* Close button */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsFullscreenImage(false);
+                    }}
+                    className="absolute top-4 right-4 p-3 rounded-full bg-white text-black shadow-lg z-10"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                  
+                  {/* Image counter */}
+                  {allImages.length > 1 && (
+                    <div className="absolute top-4 left-4 px-4 py-2 rounded-full bg-white/90 text-black text-sm font-bold">
+                      {currentImageIndex + 1} / {allImages.length}
+                    </div>
+                  )}
+                  
+                  {/* Swipe hint */}
+                  {allImages.length > 1 && (
+                    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-white/80 text-black text-sm">
+                      ← Свайп для перегляду →
+                    </div>
+                  )}
+                  
+                  {/* Navigation arrows for fullscreen */}
+                  {allImages.length > 1 && (
                     <>
-                      <img
-                        src={allImages[currentImageIndex]}
-                        alt={`${selectedListing.title} - фото ${currentImageIndex + 1}`}
-                        className="max-w-full max-h-full object-contain"
-                      />
-                      
-                      {/* Close button */}
                       <button
-                        onClick={() => setIsFullscreenImage(false)}
-                        className="absolute top-4 right-4 p-3 rounded-full bg-white text-black shadow-lg"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          goToPrevImage(allImages);
+                        }}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 p-4 rounded-full bg-white/90 text-black shadow-lg z-10 active:bg-white"
                       >
-                        <X className="w-6 h-6" />
+                        <ChevronLeft className="w-8 h-8" />
                       </button>
-                      
-                      {/* Image counter */}
-                      {allImages.length > 1 && (
-                        <div className="absolute top-4 left-4 px-4 py-2 rounded-full bg-white/90 text-black text-sm font-bold">
-                          {currentImageIndex + 1} / {allImages.length}
-                        </div>
-                      )}
-                      
-                      {/* Swipe hint */}
-                      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-white/80 text-black text-sm">
-                        ← Свайп для перегляду →
-                      </div>
-                      
-                      {/* Navigation arrows for fullscreen */}
-                      {allImages.length > 1 && (
-                        <>
-                          <button
-                            onClick={() => setCurrentImageIndex(prev => prev === 0 ? allImages.length - 1 : prev - 1)}
-                            className="absolute left-3 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/90 text-black"
-                          >
-                            <ChevronLeft className="w-6 h-6" />
-                          </button>
-                          <button
-                            onClick={() => setCurrentImageIndex(prev => prev === allImages.length - 1 ? 0 : prev + 1)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/90 text-black"
-                          >
-                            <ChevronRight className="w-6 h-6" />
-                          </button>
-                        </>
-                      )}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          goToNextImage(allImages);
+                        }}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 p-4 rounded-full bg-white/90 text-black shadow-lg z-10 active:bg-white"
+                      >
+                        <ChevronRight className="w-8 h-8" />
+                      </button>
                     </>
-                  );
-                })()}
-              </div>
-            )}
+                  )}
+                </div>
+              );
+            })()}
 
             {displayedListings.length === 0 && (
               <div className="card-container p-12 text-center">
