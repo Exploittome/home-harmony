@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, TouchEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -44,6 +44,36 @@ export default function Main() {
   const [listingsLoading, setListingsLoading] = useState(true);
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isFullscreenImage, setIsFullscreenImage] = useState(false);
+  
+  // Touch swipe handling
+  const touchStartX = useRef<number>(0);
+  const touchEndX = useRef<number>(0);
+  
+  const handleTouchStart = (e: TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+  
+  const handleTouchMove = (e: TouchEvent) => {
+    touchEndX.current = e.touches[0].clientX;
+  };
+  
+  const handleTouchEnd = (allImages: string[]) => {
+    const diff = touchStartX.current - touchEndX.current;
+    const threshold = 50;
+    
+    if (Math.abs(diff) > threshold) {
+      if (diff > 0) {
+        // Swipe left - next image
+        setCurrentImageIndex(prev => prev === allImages.length - 1 ? 0 : prev + 1);
+      } else {
+        // Swipe right - previous image
+        setCurrentImageIndex(prev => prev === 0 ? allImages.length - 1 : prev - 1);
+      }
+    }
+    touchStartX.current = 0;
+    touchEndX.current = 0;
+  };
   
   // Filters
   const [city, setCity] = useState('');
@@ -551,7 +581,7 @@ export default function Main() {
                 setCurrentImageIndex(0);
               }
             }}>
-              <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0">
+              <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0 md:max-h-[90vh]">
                 {selectedListing && (() => {
                   const allImages = selectedListing.images?.length 
                     ? selectedListing.images 
@@ -560,25 +590,42 @@ export default function Main() {
                   return (
                   <div className="flex flex-col">
                     {/* Image Carousel */}
-                    <div className="relative aspect-[16/10] bg-muted">
+                    <div 
+                      className="relative aspect-[16/10] bg-muted cursor-pointer md:cursor-default"
+                      onClick={() => window.innerWidth < 768 && setIsFullscreenImage(true)}
+                      onTouchStart={handleTouchStart}
+                      onTouchMove={handleTouchMove}
+                      onTouchEnd={() => handleTouchEnd(allImages)}
+                    >
                       <img
                         src={allImages[currentImageIndex]}
                         alt={`${selectedListing.title} - фото ${currentImageIndex + 1}`}
                         className="w-full h-full object-cover transition-opacity duration-300"
                       />
                       
-                      {/* Navigation arrows */}
+                      {/* Tap to fullscreen hint on mobile */}
+                      <div className="absolute bottom-2 right-2 px-2 py-1 rounded-full bg-background/80 backdrop-blur-sm text-xs text-foreground md:hidden">
+                        Натисніть для збільшення
+                      </div>
+                      
+                      {/* Navigation arrows - hidden on mobile, visible on desktop */}
                       {allImages.length > 1 && (
                         <>
                           <button
-                            onClick={() => setCurrentImageIndex(prev => prev === 0 ? allImages.length - 1 : prev - 1)}
-                            className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-background/90 backdrop-blur-sm hover:bg-background transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setCurrentImageIndex(prev => prev === 0 ? allImages.length - 1 : prev - 1);
+                            }}
+                            className="hidden md:flex absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-background/90 backdrop-blur-sm hover:bg-background transition-colors"
                           >
                             <ChevronLeft className="w-6 h-6 text-foreground" />
                           </button>
                           <button
-                            onClick={() => setCurrentImageIndex(prev => prev === allImages.length - 1 ? 0 : prev + 1)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-background/90 backdrop-blur-sm hover:bg-background transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setCurrentImageIndex(prev => prev === allImages.length - 1 ? 0 : prev + 1);
+                            }}
+                            className="hidden md:flex absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-background/90 backdrop-blur-sm hover:bg-background transition-colors"
                           >
                             <ChevronRight className="w-6 h-6 text-foreground" />
                           </button>
@@ -603,7 +650,10 @@ export default function Main() {
                           <Button
                             variant={savedIds.has(selectedListing.id) ? "default" : "outline"}
                             size="sm"
-                            onClick={() => handleSaveListing(selectedListing.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSaveListing(selectedListing.id);
+                            }}
                             className="rounded-xl bg-background/95 backdrop-blur-sm"
                           >
                             {savedIds.has(selectedListing.id) ? (
@@ -774,6 +824,75 @@ export default function Main() {
                 })()}
               </DialogContent>
             </Dialog>
+
+            {/* Fullscreen Image Modal for Mobile */}
+            {isFullscreenImage && selectedListing && (
+              <div 
+                className="fixed inset-0 z-[200] bg-black flex items-center justify-center md:hidden"
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={() => {
+                  const allImages = selectedListing.images?.length 
+                    ? selectedListing.images 
+                    : [selectedListing.image_url || 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1200&h=800&fit=crop'];
+                  handleTouchEnd(allImages);
+                }}
+              >
+                {(() => {
+                  const allImages = selectedListing.images?.length 
+                    ? selectedListing.images 
+                    : [selectedListing.image_url || 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1200&h=800&fit=crop'];
+                  
+                  return (
+                    <>
+                      <img
+                        src={allImages[currentImageIndex]}
+                        alt={`${selectedListing.title} - фото ${currentImageIndex + 1}`}
+                        className="max-w-full max-h-full object-contain"
+                      />
+                      
+                      {/* Close button */}
+                      <button
+                        onClick={() => setIsFullscreenImage(false)}
+                        className="absolute top-4 right-4 p-3 rounded-full bg-white text-black shadow-lg"
+                      >
+                        <X className="w-6 h-6" />
+                      </button>
+                      
+                      {/* Image counter */}
+                      {allImages.length > 1 && (
+                        <div className="absolute top-4 left-4 px-4 py-2 rounded-full bg-white/90 text-black text-sm font-bold">
+                          {currentImageIndex + 1} / {allImages.length}
+                        </div>
+                      )}
+                      
+                      {/* Swipe hint */}
+                      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-white/80 text-black text-sm">
+                        ← Свайп для перегляду →
+                      </div>
+                      
+                      {/* Navigation arrows for fullscreen */}
+                      {allImages.length > 1 && (
+                        <>
+                          <button
+                            onClick={() => setCurrentImageIndex(prev => prev === 0 ? allImages.length - 1 : prev - 1)}
+                            className="absolute left-3 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/90 text-black"
+                          >
+                            <ChevronLeft className="w-6 h-6" />
+                          </button>
+                          <button
+                            onClick={() => setCurrentImageIndex(prev => prev === allImages.length - 1 ? 0 : prev + 1)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/90 text-black"
+                          >
+                            <ChevronRight className="w-6 h-6" />
+                          </button>
+                        </>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
+            )}
 
             {displayedListings.length === 0 && (
               <div className="card-container p-12 text-center">
