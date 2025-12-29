@@ -28,36 +28,44 @@ export default function Auth() {
 
   // Check for password recovery event
   useEffect(() => {
+    const hasRecoveryHash = () => {
+      const hashParams = new URLSearchParams(window.location.hash.slice(1));
+      return hashParams.get('type') === 'recovery';
+    };
+
+    // If user landed with a recovery hash (even on /auth without mode), force reset mode
+    if (hasRecoveryHash()) {
+      setIsRecoveryMode(true);
+    }
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'PASSWORD_RECOVERY') {
+      const recovery = hasRecoveryHash() || mode === 'reset-password';
+
+      if (event === 'PASSWORD_RECOVERY' || recovery) {
         setIsRecoveryMode(true);
-      } else if (session?.user && !isRecoveryMode) {
+        return;
+      }
+
+      if (session?.user) {
         navigate('/main');
       }
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user && !isRecoveryMode) {
-        // Check if this is a recovery session
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const type = hashParams.get('type');
-        if (type === 'recovery') {
-          setIsRecoveryMode(true);
-        } else {
-          navigate('/main');
-        }
+      const recovery = hasRecoveryHash() || mode === 'reset-password';
+
+      if (session?.user && recovery) {
+        setIsRecoveryMode(true);
+        return;
+      }
+
+      if (session?.user && !recovery) {
+        navigate('/main');
       }
     });
 
-    // Check URL hash for recovery token
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const type = hashParams.get('type');
-    if (type === 'recovery') {
-      setIsRecoveryMode(true);
-    }
-
     return () => subscription.unsubscribe();
-  }, [navigate, isRecoveryMode]);
+  }, [navigate, mode]);
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,7 +141,7 @@ export default function Auth() {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${window.location.origin}/auth?mode=reset-password`,
+        redirectTo: `${window.location.origin}/auth`,
       });
 
       if (error) {
