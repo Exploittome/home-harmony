@@ -20,9 +20,102 @@ export default function Auth() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
+  const [isRecoveryMode, setIsRecoveryMode] = useState(false);
 
   const isLogin = mode === 'login';
   const isForgotPassword = mode === 'forgot-password';
+  const isResetPassword = mode === 'reset-password' || isRecoveryMode;
+
+  // Check for password recovery event
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setIsRecoveryMode(true);
+      } else if (session?.user && !isRecoveryMode) {
+        navigate('/main');
+      }
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user && !isRecoveryMode) {
+        // Check if this is a recovery session
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const type = hashParams.get('type');
+        if (type === 'recovery') {
+          setIsRecoveryMode(true);
+        } else {
+          navigate('/main');
+        }
+      }
+    });
+
+    // Check URL hash for recovery token
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const type = hashParams.get('type');
+    if (type === 'recovery') {
+      setIsRecoveryMode(true);
+    }
+
+    return () => subscription.unsubscribe();
+  }, [navigate, isRecoveryMode]);
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!password.trim()) {
+      toast({
+        title: 'Помилка',
+        description: 'Будь ласка, введіть новий пароль',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      toast({
+        title: 'Помилка',
+        description: 'Паролі не співпадають',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (password.length < 6) {
+      toast({
+        title: 'Помилка',
+        description: 'Пароль має містити мінімум 6 символів',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.updateUser({ password });
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: 'Пароль змінено!',
+        description: 'Тепер ви можете увійти з новим паролем.',
+      });
+
+      setIsRecoveryMode(false);
+      await supabase.auth.signOut();
+      navigate('/auth?mode=login');
+    } catch (error: any) {
+      toast({
+        title: 'Помилка',
+        description: error.message || 'Не вдалося змінити пароль',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +133,7 @@ export default function Auth() {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${window.location.origin}/auth?mode=login`,
+        redirectTo: `${window.location.origin}/auth?mode=reset-password`,
       });
 
       if (error) {
@@ -63,23 +156,6 @@ export default function Auth() {
       setResetLoading(false);
     }
   };
-
-  // Check if user is already logged in
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session?.user) {
-        navigate('/main');
-      }
-    });
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        navigate('/main');
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -166,6 +242,34 @@ export default function Auth() {
     }
   };
 
+  const getTitle = () => {
+    if (isResetPassword) return 'Новий пароль';
+    if (isForgotPassword) return 'Відновлення пароля';
+    if (isLogin) return 'Вхід';
+    return 'Реєстрація';
+  };
+
+  const getDescription = () => {
+    if (isResetPassword) return 'Введіть ваш новий пароль';
+    if (isForgotPassword) return 'Введіть ваш email для відновлення пароля';
+    if (isLogin) return 'Увійдіть, щоб отримати доступ до оголошень';
+    return 'Створіть акаунт, щоб почати пошук житла';
+  };
+
+  const getFormHandler = () => {
+    if (isResetPassword) return handleResetPassword;
+    if (isForgotPassword) return handleForgotPassword;
+    return handleSubmit;
+  };
+
+  const getButtonText = () => {
+    if (loading || resetLoading) return 'Завантаження...';
+    if (isResetPassword) return 'Змінити пароль';
+    if (isForgotPassword) return 'Надіслати лист';
+    if (isLogin) return 'Увійти';
+    return 'Зареєструватися';
+  };
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       {/* Theme Toggle */}
@@ -196,36 +300,36 @@ export default function Auth() {
           </div>
 
           <h1 className="font-display text-3xl font-semibold text-foreground mb-2">
-            {isForgotPassword ? 'Відновлення пароля' : isLogin ? 'Вхід' : 'Реєстрація'}
+            {getTitle()}
           </h1>
           <p className="text-muted-foreground mb-8">
-            {isForgotPassword
-              ? 'Введіть ваш email для відновлення пароля'
-              : isLogin
-              ? 'Увійдіть, щоб отримати доступ до оголошень'
-              : 'Створіть акаунт, щоб почати пошук житла'}
+            {getDescription()}
           </p>
 
-          <form onSubmit={isForgotPassword ? handleForgotPassword : handleSubmit} className="space-y-5">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
-                Email
-              </label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="your@email.com"
-                className="rounded-xl h-12"
-                maxLength={255}
-              />
-            </div>
+          <form onSubmit={getFormHandler()} className="space-y-5">
+            {/* Email field - only for login, register, forgot-password */}
+            {!isResetPassword && (
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
+                  Email
+                </label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="your@email.com"
+                  className="rounded-xl h-12"
+                  maxLength={255}
+                />
+              </div>
+            )}
 
+            {/* Password field - for login, register, reset-password */}
             {!isForgotPassword && (
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-foreground mb-2">
-                  Пароль
+                  {isResetPassword ? 'Новий пароль' : 'Пароль'}
                 </label>
                 <div className="relative">
                   <Input
@@ -248,6 +352,7 @@ export default function Auth() {
               </div>
             )}
 
+            {/* Forgot password link - only for login */}
             {isLogin && (
               <div className="text-right">
                 <Link
@@ -259,7 +364,8 @@ export default function Auth() {
               </div>
             )}
 
-            {!isLogin && !isForgotPassword && (
+            {/* Confirm password field - for register and reset-password */}
+            {(!isLogin && !isForgotPassword) || isResetPassword ? (
               <div>
                 <label htmlFor="confirmPassword" className="block text-sm font-medium text-foreground mb-2">
                   Підтвердіть пароль
@@ -274,7 +380,7 @@ export default function Auth() {
                   maxLength={128}
                 />
               </div>
-            )}
+            ) : null}
 
             <Button
               type="submit"
@@ -283,18 +389,23 @@ export default function Auth() {
               className="w-full mt-6"
               disabled={loading || resetLoading}
             >
-              {loading || resetLoading
-                ? 'Завантаження...'
-                : isForgotPassword
-                ? 'Надіслати лист'
-                : isLogin
-                ? 'Увійти'
-                : 'Зареєструватися'}
+              {getButtonText()}
             </Button>
           </form>
 
           <p className="text-center text-muted-foreground mt-6">
-            {isForgotPassword ? (
+            {isResetPassword ? (
+              <>
+                Згадали старий пароль?{' '}
+                <Link
+                  to="/auth?mode=login"
+                  className="text-accent hover:underline font-medium"
+                  onClick={() => setIsRecoveryMode(false)}
+                >
+                  Увійти
+                </Link>
+              </>
+            ) : isForgotPassword ? (
               <>
                 Згадали пароль?{' '}
                 <Link
