@@ -31,15 +31,25 @@ export function Contact() {
     setLoading(true);
 
     try {
-      const { error } = await supabase
+      // Send to Telegram
+      const { data, error } = await supabase.functions.invoke('send-telegram', {
+        body: {
+          name: name.trim(),
+          email: email.trim(),
+          message: message.trim()
+        }
+      });
+
+      if (error) throw error;
+
+      // Also save to database
+      await supabase
         .from('contact_messages')
         .insert({
           name: name.trim(),
           email: email.trim(),
           message: message.trim()
         });
-
-      if (error) throw error;
 
       toast({
         title: 'Повідомлення надіслано!',
