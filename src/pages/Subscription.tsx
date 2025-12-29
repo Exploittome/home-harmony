@@ -8,41 +8,40 @@ import { Sun, Moon, ArrowLeft, Check, Star } from 'lucide-react';
 const plans = [
   {
     id: 'basic',
-    name: 'Базовий',
+    name: 'Base',
+    nameColor: 'text-green-600 dark:text-green-400',
     price: 0,
-    period: 'безкоштовно',
+    period: 'Безкоштовно',
     features: [
-      'Перегляд до 10 оголошень',
-      'Базові фільтри',
-      'Без контактних даних',
+      'Перегляд до 20 оголошень',
     ],
     limitations: [
-      'Обмежена кількість оголошень',
-      'Немає контактів орендодавців',
+      'Базові фільтри не працюють',
     ],
   },
   {
     id: '10days',
-    name: '10 днів',
+    name: 'Smart',
+    nameColor: 'text-red-600 dark:text-red-400',
     price: 99,
     period: 'за 10 днів',
     popular: true,
     features: [
       'Необмежений перегляд оголошень',
       'Всі фільтри',
-      'Контактні дані орендодавців',
       'Пріоритетна підтримка',
     ],
     limitations: [],
   },
   {
     id: '30days',
-    name: '30 днів',
+    name: 'Pro',
+    nameColor: 'text-yellow-600 dark:text-yellow-400',
     price: 199,
     period: 'за 30 днів',
     features: [
-      'Все з плану "10 днів"',
-      'Сповіщення про нові оголошення',
+      'Повний доступ до сайту',
+      'Сповіщення на телеграм про нові оголошення',
       'Збереження обраних',
       'Найкраща ціна за день',
     ],
@@ -131,7 +130,7 @@ export default function Subscription() {
                   )}
 
                   <div className="text-center mb-6">
-                    <h3 className="font-display text-2xl font-semibold text-foreground mb-2">
+                    <h3 className={`font-display text-2xl font-semibold mb-2 ${plan.nameColor}`}>
                       {plan.name}
                     </h3>
                     <div className="flex items-baseline justify-center gap-1">
@@ -184,7 +183,7 @@ export default function Subscription() {
 
             <div className="card-container p-6 md:p-8 mb-6">
               <div className="text-center mb-6">
-                <h3 className="font-display text-2xl font-semibold text-foreground mb-2">
+                <h3 className={`font-display text-2xl font-semibold mb-2 ${selectedPlanData?.nameColor}`}>
                   {selectedPlanData?.name}
                 </h3>
                 <div className="flex items-baseline justify-center gap-1">
