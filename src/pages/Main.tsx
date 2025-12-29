@@ -868,7 +868,7 @@ export default function Main() {
               
               return (
                 <div 
-                  className="fixed inset-0 z-[200] bg-black flex items-center justify-center md:hidden"
+                  className="fixed inset-0 z-[200] bg-black flex items-center justify-center md:hidden touch-none"
                 >
                   <img
                     src={allImages[currentImageIndex]}
@@ -876,20 +876,23 @@ export default function Main() {
                     className="max-w-full max-h-full object-contain pointer-events-none select-none"
                   />
                   
-                  {/* Close button - more prominent */}
+                  {/* Close button - more prominent + reliable on mobile */}
                   <button
-                    onClick={(e) => {
+                    type="button"
+                    aria-label="Закрити"
+                    onPointerDown={(e) => {
+                      e.preventDefault();
                       e.stopPropagation();
                       setIsFullscreenImage(false);
                     }}
-                    className="absolute top-4 right-4 p-4 rounded-full bg-red-500 text-white shadow-2xl z-10 border-4 border-white active:bg-red-600"
+                    className="absolute top-5 right-5 p-4 rounded-full bg-destructive text-destructive-foreground shadow-2xl z-10 border-4 border-background pointer-events-auto touch-manipulation"
                   >
                     <X className="w-8 h-8" strokeWidth={3} />
                   </button>
                   
                   {/* Image counter */}
                   {allImages.length > 1 && (
-                    <div className="absolute top-4 left-4 px-4 py-2 rounded-full bg-white text-black text-base font-bold shadow-lg">
+                    <div className="absolute top-5 left-5 px-4 py-2 rounded-full bg-background/90 text-foreground text-base font-bold shadow-lg pointer-events-none">
                       {currentImageIndex + 1} / {allImages.length}
                     </div>
                   )}
@@ -898,20 +901,26 @@ export default function Main() {
                   {allImages.length > 1 && (
                     <>
                       <button
-                        onClick={(e) => {
+                        type="button"
+                        aria-label="Попереднє фото"
+                        onPointerDown={(e) => {
+                          e.preventDefault();
                           e.stopPropagation();
                           goToPrevImage(allImages);
                         }}
-                        className="absolute left-2 top-1/2 -translate-y-1/2 p-4 rounded-full bg-white text-black shadow-2xl z-10 active:bg-gray-200 border-2 border-gray-300"
+                        className="absolute left-6 top-1/2 -translate-y-1/2 p-4 rounded-full bg-background/95 text-foreground shadow-2xl z-10 border border-border pointer-events-auto touch-manipulation"
                       >
                         <ChevronLeft className="w-10 h-10" strokeWidth={3} />
                       </button>
                       <button
-                        onClick={(e) => {
+                        type="button"
+                        aria-label="Наступне фото"
+                        onPointerDown={(e) => {
+                          e.preventDefault();
                           e.stopPropagation();
                           goToNextImage(allImages);
                         }}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 p-4 rounded-full bg-white text-black shadow-2xl z-10 active:bg-gray-200 border-2 border-gray-300"
+                        className="absolute right-6 top-1/2 -translate-y-1/2 p-4 rounded-full bg-background/95 text-foreground shadow-2xl z-10 border border-border pointer-events-auto touch-manipulation"
                       >
                         <ChevronRight className="w-10 h-10" strokeWidth={3} />
                       </button>
