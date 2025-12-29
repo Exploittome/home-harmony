@@ -227,7 +227,7 @@ export default function Main() {
 
   const getPlanLabel = (plan: SubscriptionPlan) => {
     switch (plan) {
-      case 'basic': return 'Base';
+      case 'basic': return 'Standart';
       case 'plan_10_days': return 'Smart';
       case 'plan_30_days': return 'Pro';
     }

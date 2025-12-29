@@ -8,7 +8,7 @@ import { Sun, Moon, ArrowLeft, Check, Star } from 'lucide-react';
 const plans = [
   {
     id: 'basic',
-    name: 'Base',
+    name: 'Standart',
     nameColor: 'text-green-600 dark:text-green-400',
     price: 0,
     period: 'Безкоштовно',
