@@ -227,9 +227,9 @@ export default function Main() {
 
   const getPlanLabel = (plan: SubscriptionPlan) => {
     switch (plan) {
-      case 'basic': return 'Базовий план';
-      case 'plan_10_days': return 'План 10 днів';
-      case 'plan_30_days': return 'План 30 днів';
+      case 'basic': return 'Base';
+      case 'plan_10_days': return 'Smart';
+      case 'plan_30_days': return 'Pro';
     }
   };
 
@@ -321,7 +321,9 @@ export default function Main() {
                   <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-bold ${
                     userPlan === 'basic' 
                       ? 'bg-green-500/10 text-green-600 dark:text-green-400' 
-                      : 'bg-accent/10 text-accent'
+                      : userPlan === 'plan_10_days'
+                        ? 'bg-red-500/10 text-red-600 dark:text-red-400'
+                        : 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400'
                   }`}>
                     {planLoading ? 'Завантаження...' : getPlanLabel(userPlan)}
                   </span>
