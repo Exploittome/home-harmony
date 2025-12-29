@@ -329,7 +329,17 @@ export default function Main() {
                         <div className={userPlan !== 'plan_30_days' ? 'opacity-60' : ''}>
                           <Button 
                             variant="outline" 
-                            onClick={userPlan === 'plan_30_days' ? openTelegramBot : undefined}
+                            onClick={() => {
+                              if (userPlan === 'plan_30_days') {
+                                openTelegramBot();
+                              } else {
+                                toast({
+                                  title: "Підвищіть план підписки",
+                                  description: "Для доступу до Телеграм Бота потрібен 30-денний план",
+                                  variant: "destructive",
+                                });
+                              }
+                            }}
                             className={`w-full mt-4 rounded-xl border-[#0088cc] text-[#0088cc] hover:bg-[#0088cc]/10 ${userPlan !== 'plan_30_days' ? 'cursor-not-allowed' : ''}`}
                           >
                             <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
@@ -352,7 +362,17 @@ export default function Main() {
                         <div className={userPlan !== 'plan_30_days' ? 'opacity-60' : ''}>
                           <Button 
                             variant="outline" 
-                            onClick={userPlan === 'plan_30_days' ? () => navigate('/saved') : undefined}
+                            onClick={() => {
+                              if (userPlan === 'plan_30_days') {
+                                navigate('/saved');
+                              } else {
+                                toast({
+                                  title: "Підвищіть план підписки",
+                                  description: "Для доступу до збережених оголошень потрібен 30-денний план",
+                                  variant: "destructive",
+                                });
+                              }
+                            }}
                             className={`w-full mt-3 rounded-xl border-accent text-accent hover:bg-accent/10 ${userPlan !== 'plan_30_days' ? 'cursor-not-allowed' : ''}`}
                           >
                             <Bookmark className="h-5 w-5 mr-2" />
