@@ -219,6 +219,12 @@ export default function Main() {
     if (minPrice && listing.price < parseInt(minPrice)) return false;
     if (maxPrice && listing.price > parseInt(maxPrice)) return false;
     if (rooms && listing.rooms !== parseInt(rooms)) return false;
+    if (propertyType) {
+      // Filter by property type based on rooms count
+      if (propertyType === 'apartment' && (listing.rooms === null || listing.rooms < 1)) return false;
+      if (propertyType === 'house' && (listing.rooms === null || listing.rooms < 3)) return false;
+      if (propertyType === 'studio' && listing.rooms !== 1) return false;
+    }
     return true;
   });
 
