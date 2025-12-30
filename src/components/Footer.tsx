@@ -45,13 +45,13 @@ export function Footer() {
               <li><span>📞 +380 98 957 08 30</span></li>
             </ul>
             <div className="flex gap-3 mt-4">
-              <a href="https://t.me/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground smooth-transition">
+              <a href="https://t.me/+380989570830" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground smooth-transition">
                 <TelegramIcon />
               </a>
-              <a href="https://instagram.com/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground smooth-transition">
+              <a href="https://www.instagram.com/_go_to_home_sup/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground smooth-transition">
                 <Instagram className="w-5 h-5" />
               </a>
-              <a href="https://tiktok.com/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground smooth-transition">
+              <a href="https://www.tiktok.com/@_go_to_home_" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground smooth-transition">
                 <TikTokIcon />
               </a>
             </div>
