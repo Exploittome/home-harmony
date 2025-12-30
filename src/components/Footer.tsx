@@ -62,9 +62,9 @@ export function Footer() {
           <p className="text-sm text-muted-foreground">
             © 2024 GOTOHOME. Всі права захищено.
           </p>
-          <div className="flex gap-6 text-sm text-muted-foreground">
+          <div className="flex flex-wrap gap-4 md:gap-6 text-sm text-muted-foreground">
             <Link to="/privacy" className="hover:text-foreground smooth-transition">Публічний договір</Link>
-            <Link to="/terms" className="hover:text-foreground smooth-transition">Умови використання</Link>
+            <Link to="/terms" className="hover:text-foreground smooth-transition">Політика повернення коштів</Link>
             <Link to="/user-agreement" className="hover:text-foreground smooth-transition">Угода користувача</Link>
           </div>
         </div>
