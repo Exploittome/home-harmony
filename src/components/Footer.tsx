@@ -28,8 +28,8 @@ export function Footer() {
           <div>
             <h4 className="font-semibold text-foreground mb-4">Підтримка</h4>
             <ul className="space-y-2 text-muted-foreground">
-              <li><span>support@gotohome.com.ua</span></li>
-              <li><span>📞 +380 (77) 777-77-77</span></li>
+              <li><span>gotohomesup@gmail.com</span></li>
+              <li><span>📞 +380 98 957 08 30</span></li>
             </ul>
           </div>
         </div>
