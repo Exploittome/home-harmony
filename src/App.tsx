@@ -10,6 +10,7 @@ import Main from "./pages/Main";
 import Subscription from "./pages/Subscription";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfUse from "./pages/TermsOfUse";
+import UserAgreement from "./pages/UserAgreement";
 import Saved from "./pages/Saved";
 import NotFound from "./pages/NotFound";
 
@@ -71,6 +72,7 @@ const App = () => (
           <Route path="/saved" element={<Saved />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<TermsOfUse />} />
+          <Route path="/user-agreement" element={<UserAgreement />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

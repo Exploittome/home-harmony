@@ -65,6 +65,7 @@ export function Footer() {
           <div className="flex gap-6 text-sm text-muted-foreground">
             <Link to="/privacy" className="hover:text-foreground smooth-transition">Політика конфіденційності</Link>
             <Link to="/terms" className="hover:text-foreground smooth-transition">Умови використання</Link>
+            <Link to="/user-agreement" className="hover:text-foreground smooth-transition">Угода користувача</Link>
           </div>
         </div>
       </div>
