@@ -105,6 +105,9 @@ export default function Main() {
   const [maxPrice, setMaxPrice] = useState('');
   const [rooms, setRooms] = useState('');
   const [propertyType, setPropertyType] = useState('');
+  const [minArea, setMinArea] = useState('');
+  const [maxArea, setMaxArea] = useState('');
+  const [hasParking, setHasParking] = useState(false);
 
   // Fetch listings from database
   const fetchListings = async () => {
@@ -225,6 +228,11 @@ export default function Main() {
       if (propertyType === 'house' && (listing.rooms === null || listing.rooms < 3)) return false;
       if (propertyType === 'studio' && listing.rooms !== 1) return false;
     }
+    // Area filter
+    if (minArea && (listing.area === null || listing.area < parseFloat(minArea))) return false;
+    if (maxArea && (listing.area === null || listing.area > parseFloat(maxArea))) return false;
+    // Parking filter
+    if (hasParking && !listing.has_parking) return false;
     return true;
   });
 
@@ -542,6 +550,76 @@ export default function Main() {
                   </Tooltip>
                 </TooltipProvider>
 
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className={!canUseFilters ? 'opacity-60 cursor-not-allowed' : ''}>
+                        <label className="block text-sm font-medium text-foreground mb-2">Площа (м²)</label>
+                        <div className="flex gap-2">
+                          <Input
+                            type="number"
+                            placeholder="Від"
+                            value={minArea}
+                            onChange={(e) => handleFilterChange(setMinArea, e.target.value)}
+                            className="rounded-xl"
+                            disabled={!canUseFilters}
+                          />
+                          <Input
+                            type="number"
+                            placeholder="До"
+                            value={maxArea}
+                            onChange={(e) => handleFilterChange(setMaxArea, e.target.value)}
+                            className="rounded-xl"
+                            disabled={!canUseFilters}
+                          />
+                        </div>
+                      </div>
+                    </TooltipTrigger>
+                    {!canUseFilters && (
+                      <TooltipContent variant="warning">
+                        <p>🔒 Оновіться до преміум плану для використання фільтрів</p>
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                </TooltipProvider>
+
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className={!canUseFilters ? 'opacity-60 cursor-not-allowed' : ''}>
+                        <label className="flex items-center gap-3 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={hasParking}
+                            onChange={(e) => {
+                              if (!canUseFilters) {
+                                toast({
+                                  title: "Підвищіть план підписки",
+                                  description: "Для використання фільтрів потрібен план на 10 або 30 днів",
+                                  variant: "destructive",
+                                });
+                                return;
+                              }
+                              setHasParking(e.target.checked);
+                            }}
+                            disabled={!canUseFilters}
+                            className="h-5 w-5 rounded border-border text-primary focus:ring-primary disabled:opacity-50"
+                          />
+                          <span className="text-sm font-medium text-foreground flex items-center gap-2">
+                            <Car className="w-4 h-4" />
+                            Тільки з паркінгом
+                          </span>
+                        </label>
+                      </div>
+                    </TooltipTrigger>
+                    {!canUseFilters && (
+                      <TooltipContent variant="warning">
+                        <p>🔒 Оновіться до преміум плану для використання фільтрів</p>
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                </TooltipProvider>
+
                 <Button
                   variant="hero"
                   className="w-full"
@@ -559,6 +637,9 @@ export default function Main() {
                     setMaxPrice('');
                     setRooms('');
                     setPropertyType('');
+                    setMinArea('');
+                    setMaxArea('');
+                    setHasParking(false);
                   }}
                 >
                   <Search className="w-4 h-4 mr-2" />
