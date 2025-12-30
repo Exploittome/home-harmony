@@ -24,8 +24,7 @@ export function Footer() {
               <span className="font-display text-xl font-semibold text-foreground">GOTOHOME</span>
             </Link>
             <p className="text-muted-foreground max-w-md">
-              Сучасна платформа для пошуку орендного житла в Україні. 
-              Знаходьте ідеальне житло швидко та зручно.
+              Сучасна платформа для пошуку орендного житла в Україні - шукай швидко та напряму від власників, без ріелторів та додаткових комісій.
             </p>
           </div>
 
