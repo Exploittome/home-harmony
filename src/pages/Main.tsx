@@ -331,8 +331,8 @@ export default function Main() {
               <div className="mb-6 pb-6 border-b border-border">
                 <p className="text-sm text-muted-foreground mb-1">Ви увійшли як</p>
                 <p className="font-medium text-foreground truncate">{user?.email || 'Завантаження...'}</p>
-                <div className="mt-3">
-                  <p className="text-sm text-muted-foreground mb-2">Ваш план підписки:</p>
+                <div className="mt-3 flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2">
+                  <span className="text-sm text-muted-foreground">Ваш план підписки:</span>
                   <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-bold ${
                     userPlan === 'basic' 
                       ? 'bg-green-500/10 text-green-600 dark:text-green-400' 
