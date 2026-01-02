@@ -332,6 +332,7 @@ export default function Main() {
                 <p className="text-sm text-muted-foreground mb-1">Ви увійшли як</p>
                 <p className="font-medium text-foreground truncate">{user?.email || 'Завантаження...'}</p>
                 <div className="mt-3">
+                  <p className="text-sm text-muted-foreground mb-2">Ваш план підписки:</p>
                   <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-bold ${
                     userPlan === 'basic' 
                       ? 'bg-green-500/10 text-green-600 dark:text-green-400' 
