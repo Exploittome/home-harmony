@@ -218,7 +218,7 @@ export default function Main() {
 
   const filteredListings = listings.filter((listing) => {
     if (!canUseFilters) return true; // Show all for basic plan (no filtering)
-    if (city && listing.city !== city) return false;
+    if (city && listing.city.toLowerCase() !== city.toLowerCase()) return false;
     if (minPrice && listing.price < parseInt(minPrice)) return false;
     if (maxPrice && listing.price > parseInt(maxPrice)) return false;
     if (rooms && listing.rooms !== parseInt(rooms)) return false;
@@ -441,11 +441,33 @@ export default function Main() {
                             <SelectValue placeholder="Оберіть місто" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Київ">Київ</SelectItem>
-                            <SelectItem value="Львів">Львів</SelectItem>
-                            <SelectItem value="Одеса">Одеса</SelectItem>
-                            <SelectItem value="Харків">Харків</SelectItem>
+                            <SelectItem value="">Всі міста</SelectItem>
+                            <SelectItem value="Вінниця">Вінниця</SelectItem>
                             <SelectItem value="Дніпро">Дніпро</SelectItem>
+                            <SelectItem value="Житомир">Житомир</SelectItem>
+                            <SelectItem value="Запоріжжя">Запоріжжя</SelectItem>
+                            <SelectItem value="Івано-Франківськ">Івано-Франківськ</SelectItem>
+                            <SelectItem value="Калинівка">Калинівка</SelectItem>
+                            <SelectItem value="Київ">Київ</SelectItem>
+                            <SelectItem value="Кропивницький">Кропивницький</SelectItem>
+                            <SelectItem value="Луцьк">Луцьк</SelectItem>
+                            <SelectItem value="Львів">Львів</SelectItem>
+                            <SelectItem value="Миколаїв">Миколаїв</SelectItem>
+                            <SelectItem value="Могилів-Подільський">Могилів-Подільський</SelectItem>
+                            <SelectItem value="Одеса">Одеса</SelectItem>
+                            <SelectItem value="Полтава">Полтава</SelectItem>
+                            <SelectItem value="Рівне">Рівне</SelectItem>
+                            <SelectItem value="Стрижавка">Стрижавка</SelectItem>
+                            <SelectItem value="Суми">Суми</SelectItem>
+                            <SelectItem value="Тернопіль">Тернопіль</SelectItem>
+                            <SelectItem value="Ужгород">Ужгород</SelectItem>
+                            <SelectItem value="Харків">Харків</SelectItem>
+                            <SelectItem value="Херсон">Херсон</SelectItem>
+                            <SelectItem value="Хмельницький">Хмельницький</SelectItem>
+                            <SelectItem value="Хмільник">Хмільник</SelectItem>
+                            <SelectItem value="Черкаси">Черкаси</SelectItem>
+                            <SelectItem value="Чернівці">Чернівці</SelectItem>
+                            <SelectItem value="Чернігів">Чернігів</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
