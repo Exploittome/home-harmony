@@ -324,8 +324,8 @@ export default function Main() {
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid lg:grid-cols-[320px_1fr] gap-8">
-          {/* Sidebar */}
-          <aside className="lg:sticky lg:top-24 lg:h-fit">
+          {/* Sidebar - independently scrollable */}
+          <aside className="lg:sticky lg:top-24 lg:h-[calc(100vh-8rem)] lg:overflow-y-auto lg:overflow-x-hidden scrollbar-thin">
             <div className="card-container p-6">
               {/* User Info */}
               <div className="mb-6 pb-6 border-b border-border">
