@@ -299,17 +299,17 @@ export default function Saved() {
             setCurrentImageIndex(0);
           }
         }}>
-          <DialogContent className="max-w-3xl w-[95vw] max-h-[90vh] overflow-hidden p-0">
+          <DialogContent className="max-w-3xl w-full md:w-[95vw] max-h-[100dvh] md:max-h-[90vh] overflow-hidden p-0 rounded-none md:rounded-lg">
             {selectedListing && (() => {
               const allImages = selectedListing.images?.length 
                 ? selectedListing.images 
                 : [selectedListing.image_url || 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1200&h=800&fit=crop'];
               
               return (
-              <div className="flex flex-col max-h-[90vh] overflow-y-auto">
+              <div className="flex flex-col max-h-[100dvh] md:max-h-[90vh] overflow-y-auto">
                 {/* Image Carousel */}
                 <div 
-                  className="relative w-full h-[40vh] md:h-[50vh] bg-muted cursor-pointer md:cursor-default overflow-hidden flex-shrink-0"
+                  className="relative w-full h-[35vh] md:h-[50vh] bg-muted cursor-pointer md:cursor-default overflow-hidden flex-shrink-0"
                   onClick={() => window.innerWidth < 768 && setIsFullscreenImage(true)}
                   onTouchStart={handleTouchStart}
                   onTouchMove={handleTouchMove}
@@ -324,9 +324,9 @@ export default function Saved() {
                     }}
                   />
                   
-                  {/* Tap to fullscreen hint on mobile */}
-                  <div className="absolute bottom-2 right-2 px-2 py-1 rounded-full bg-background/80 backdrop-blur-sm text-xs text-foreground md:hidden">
-                    Натисніть для збільшення
+                  {/* Tap to fullscreen hint on mobile - positioned at top */}
+                  <div className="absolute top-4 right-4 px-2 py-1 rounded-full bg-background/80 backdrop-blur-sm text-xs text-foreground md:hidden">
+                    👆 Збільшити
                   </div>
                   
                   {/* Navigation arrows */}
@@ -361,9 +361,9 @@ export default function Saved() {
                   )}
                   
                   {/* Image overlay with price */}
-                  <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between">
-                    <div className="px-4 py-2 rounded-xl bg-background/95 backdrop-blur-sm">
-                      <span className="text-2xl font-bold text-accent">
+                  <div className="absolute bottom-3 left-3 right-3 md:bottom-4 md:left-4 md:right-4 flex items-end justify-between gap-2">
+                    <div className="px-3 py-1.5 md:px-4 md:py-2 rounded-xl bg-background/95 backdrop-blur-sm">
+                      <span className="text-lg md:text-2xl font-bold text-accent">
                         {selectedListing.price.toLocaleString()} ₴/міс
                       </span>
                     </div>
