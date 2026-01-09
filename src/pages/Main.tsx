@@ -319,7 +319,7 @@ export default function Main() {
   };
 
   const openTelegramBot = () => {
-    window.open('https://t.me/your_bot_name', '_blank');
+    window.open('https://t.me/gotohomepro_bot', '_blank');
   };
 
   const handleSaveListing = async (listingId: string) => {
