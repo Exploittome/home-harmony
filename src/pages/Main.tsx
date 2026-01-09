@@ -51,6 +51,72 @@ export default function Main() {
   const dragStart = useRef({ x: 0, y: 0 });
   const lastPosition = useRef({ x: 0, y: 0 });
   
+  // Zoom handlers
+  const handleZoomIn = () => {
+    setZoomLevel(prev => Math.min(prev + 0.5, 4));
+  };
+  
+  const handleZoomOut = () => {
+    setZoomLevel(prev => {
+      const newZoom = Math.max(prev - 0.5, 1);
+      if (newZoom === 1) {
+        setImagePosition({ x: 0, y: 0 });
+      }
+      return newZoom;
+    });
+  };
+  
+  const handleResetZoom = () => {
+    setZoomLevel(1);
+    setImagePosition({ x: 0, y: 0 });
+  };
+  
+  const handleZoomWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.deltaY < 0) {
+      setZoomLevel(prev => Math.min(prev + 0.25, 4));
+    } else {
+      setZoomLevel(prev => {
+        const newZoom = Math.max(prev - 0.25, 1);
+        if (newZoom === 1) {
+          setImagePosition({ x: 0, y: 0 });
+        }
+        return newZoom;
+      });
+    }
+  };
+  
+  const handleImageMouseDown = (e: React.MouseEvent) => {
+    if (zoomLevel > 1) {
+      e.preventDefault();
+      setIsDragging(true);
+      dragStart.current = { x: e.clientX, y: e.clientY };
+      lastPosition.current = { ...imagePosition };
+    }
+  };
+  
+  const handleImageMouseMove = (e: React.MouseEvent) => {
+    if (isDragging && zoomLevel > 1) {
+      const deltaX = e.clientX - dragStart.current.x;
+      const deltaY = e.clientY - dragStart.current.y;
+      setImagePosition({
+        x: lastPosition.current.x + deltaX,
+        y: lastPosition.current.y + deltaY
+      });
+    }
+  };
+  
+  const handleImageMouseUp = () => {
+    setIsDragging(false);
+  };
+  
+  const closeFullscreen = () => {
+    setIsFullscreenImage(false);
+    setZoomLevel(1);
+    setImagePosition({ x: 0, y: 0 });
+  };
+  
   // Touch swipe handling
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
@@ -1073,79 +1139,18 @@ export default function Main() {
                 ? selectedListing.images 
                 : [selectedListing.image_url || 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1200&h=800&fit=crop'];
               
-              const handleZoomIn = () => {
-                setZoomLevel(prev => Math.min(prev + 0.5, 4));
-              };
-              
-              const handleZoomOut = () => {
-                setZoomLevel(prev => {
-                  const newZoom = Math.max(prev - 0.5, 1);
-                  if (newZoom === 1) {
-                    setImagePosition({ x: 0, y: 0 });
-                  }
-                  return newZoom;
-                });
-              };
-              
-              const handleResetZoom = () => {
-                setZoomLevel(1);
-                setImagePosition({ x: 0, y: 0 });
-              };
-              
-              const handleWheel = (e: React.WheelEvent) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (e.deltaY < 0) {
-                  setZoomLevel(prev => Math.min(prev + 0.25, 4));
-                } else {
-                  setZoomLevel(prev => {
-                    const newZoom = Math.max(prev - 0.25, 1);
-                    if (newZoom === 1) {
-                      setImagePosition({ x: 0, y: 0 });
-                    }
-                    return newZoom;
-                  });
-                }
-              };
-              
-              const handleMouseDown = (e: React.MouseEvent) => {
-                if (zoomLevel > 1) {
-                  e.preventDefault();
-                  setIsDragging(true);
-                  dragStart.current = { x: e.clientX, y: e.clientY };
-                  lastPosition.current = { ...imagePosition };
-                }
-              };
-              
-              const handleMouseMove = (e: React.MouseEvent) => {
-                if (isDragging && zoomLevel > 1) {
-                  const deltaX = e.clientX - dragStart.current.x;
-                  const deltaY = e.clientY - dragStart.current.y;
-                  setImagePosition({
-                    x: lastPosition.current.x + deltaX,
-                    y: lastPosition.current.y + deltaY
-                  });
-                }
-              };
-              
-              const handleMouseUp = () => {
-                setIsDragging(false);
-              };
-              
               return (
                 <div 
                   className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center touch-none overflow-hidden"
                   onClick={() => {
                     if (zoomLevel === 1) {
-                      setIsFullscreenImage(false);
-                      setZoomLevel(1);
-                      setImagePosition({ x: 0, y: 0 });
+                      closeFullscreen();
                     }
                   }}
-                  onWheel={handleWheel}
-                  onMouseMove={handleMouseMove}
-                  onMouseUp={handleMouseUp}
-                  onMouseLeave={handleMouseUp}
+                  onWheel={handleZoomWheel}
+                  onMouseMove={handleImageMouseMove}
+                  onMouseUp={handleImageMouseUp}
+                  onMouseLeave={handleImageMouseUp}
                 >
                   <img
                     src={allImages[currentImageIndex]}
@@ -1158,7 +1163,7 @@ export default function Main() {
                       pointerEvents: zoomLevel > 1 ? 'auto' : 'none'
                     }}
                     onClick={(e) => e.stopPropagation()}
-                    onMouseDown={handleMouseDown}
+                    onMouseDown={handleImageMouseDown}
                     draggable={false}
                   />
                   
@@ -1168,9 +1173,7 @@ export default function Main() {
                     aria-label="Закрити"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setIsFullscreenImage(false);
-                      setZoomLevel(1);
-                      setImagePosition({ x: 0, y: 0 });
+                      closeFullscreen();
                     }}
                     className="absolute top-4 right-4 md:top-6 md:right-6 p-3 md:p-4 rounded-full bg-background/90 backdrop-blur-sm text-foreground shadow-2xl z-10 hover:bg-background transition-colors pointer-events-auto touch-manipulation"
                   >
