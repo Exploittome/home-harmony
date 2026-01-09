@@ -778,7 +778,7 @@ export default function Main() {
                   <div className="flex flex-col">
                     {/* Image Carousel */}
                     <div 
-                      className="relative aspect-[16/10] bg-muted cursor-pointer md:cursor-default"
+                      className="relative w-full aspect-[16/10] bg-muted cursor-pointer md:cursor-default overflow-hidden flex items-center justify-center"
                       onClick={() => window.innerWidth < 768 && setIsFullscreenImage(true)}
                       onTouchStart={handleTouchStart}
                       onTouchMove={handleTouchMove}
@@ -787,7 +787,7 @@ export default function Main() {
                       <img
                         src={allImages[currentImageIndex]}
                         alt={`${selectedListing.title} - фото ${currentImageIndex + 1}`}
-                        className="w-full h-full object-contain bg-muted transition-opacity duration-300"
+                        className="max-w-full max-h-full object-contain transition-opacity duration-300"
                       />
                       
                       {/* Tap to fullscreen hint on mobile */}
