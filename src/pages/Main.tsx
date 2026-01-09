@@ -875,7 +875,7 @@ export default function Main() {
                     
                     {/* Thumbnail strip */}
                     {allImages.length > 1 && (
-                      <div className="flex gap-2 p-3 bg-muted/50 overflow-x-auto">
+                      <div className="flex gap-2 p-3 bg-background border-b border-border overflow-x-auto flex-shrink-0">
                         {allImages.map((img, idx) => (
                           <button
                             key={idx}
