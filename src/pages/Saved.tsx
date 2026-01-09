@@ -299,17 +299,17 @@ export default function Saved() {
             setCurrentImageIndex(0);
           }
         }}>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0 md:max-h-[90vh]">
+          <DialogContent className="max-w-3xl w-[95vw] max-h-[90vh] overflow-hidden p-0">
             {selectedListing && (() => {
               const allImages = selectedListing.images?.length 
                 ? selectedListing.images 
                 : [selectedListing.image_url || 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1200&h=800&fit=crop'];
               
               return (
-              <div className="flex flex-col">
+              <div className="flex flex-col max-h-[90vh] overflow-y-auto">
                 {/* Image Carousel */}
                 <div 
-                  className="relative w-full aspect-[16/10] bg-muted cursor-pointer md:cursor-default overflow-hidden flex items-center justify-center"
+                  className="relative w-full h-[40vh] md:h-[50vh] bg-muted cursor-pointer md:cursor-default overflow-hidden flex items-center justify-center flex-shrink-0"
                   onClick={() => window.innerWidth < 768 && setIsFullscreenImage(true)}
                   onTouchStart={handleTouchStart}
                   onTouchMove={handleTouchMove}
