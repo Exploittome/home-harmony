@@ -309,23 +309,31 @@ export default function Saved() {
               <div className="flex flex-col max-h-[100dvh] md:max-h-[90vh] overflow-y-auto">
                 {/* Image Carousel */}
                 <div 
-                  className="relative w-full h-[35vh] md:h-[50vh] bg-muted cursor-pointer md:cursor-default overflow-hidden flex-shrink-0"
+                  className="relative w-full h-[35vh] md:h-[46vh] bg-muted cursor-pointer md:cursor-default overflow-hidden flex-shrink-0"
                   onClick={() => window.innerWidth < 768 && setIsFullscreenImage(true)}
                   onTouchStart={handleTouchStart}
                   onTouchMove={handleTouchMove}
                   onTouchEnd={() => handleTouchEnd(allImages)}
                 >
+                  {/* Blurred background to avoid empty side bars for portrait photos */}
+                  <div
+                    aria-hidden="true"
+                    className="absolute inset-0 z-0 bg-center bg-cover blur-2xl scale-110 opacity-60"
+                    style={{ backgroundImage: `url(${allImages[currentImageIndex]})` }}
+                  />
+                  <div aria-hidden="true" className="absolute inset-0 z-[1] bg-background/30" />
+
                   <img
                     src={allImages[currentImageIndex]}
                     alt={`${selectedListing.title} - фото ${currentImageIndex + 1}`}
-                    className="w-full h-full object-cover transition-opacity duration-300"
+                    className="relative z-10 w-full h-full object-contain transition-opacity duration-300"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop';
                     }}
                   />
                   
                   {/* Tap to fullscreen hint on mobile - positioned at top */}
-                  <div className="absolute top-4 right-4 px-2 py-1 rounded-full bg-background/80 backdrop-blur-sm text-xs text-foreground md:hidden">
+                  <div className="absolute top-4 right-4 z-20 px-2 py-1 rounded-full bg-background/80 backdrop-blur-sm text-xs text-foreground md:hidden">
                     👆 Збільшити
                   </div>
                   
@@ -337,7 +345,7 @@ export default function Saved() {
                           e.stopPropagation();
                           setCurrentImageIndex(prev => prev === 0 ? allImages.length - 1 : prev - 1);
                         }}
-                        className="hidden md:flex absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-background/90 backdrop-blur-sm hover:bg-background transition-colors"
+                        className="hidden md:flex absolute left-3 top-1/2 z-20 -translate-y-1/2 p-2 rounded-full bg-background/90 backdrop-blur-sm hover:bg-background transition-colors"
                       >
                         <ChevronLeft className="w-6 h-6 text-foreground" />
                       </button>
@@ -346,7 +354,7 @@ export default function Saved() {
                           e.stopPropagation();
                           setCurrentImageIndex(prev => prev === allImages.length - 1 ? 0 : prev + 1);
                         }}
-                        className="hidden md:flex absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-background/90 backdrop-blur-sm hover:bg-background transition-colors"
+                        className="hidden md:flex absolute right-3 top-1/2 z-20 -translate-y-1/2 p-2 rounded-full bg-background/90 backdrop-blur-sm hover:bg-background transition-colors"
                       >
                         <ChevronRight className="w-6 h-6 text-foreground" />
                       </button>
@@ -355,13 +363,13 @@ export default function Saved() {
                   
                   {/* Image counter */}
                   {allImages.length > 1 && (
-                    <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-background/90 backdrop-blur-sm text-sm font-medium text-foreground">
+                    <div className="absolute top-4 left-4 z-20 px-3 py-1 rounded-full bg-background/90 backdrop-blur-sm text-sm font-medium text-foreground">
                       {currentImageIndex + 1} / {allImages.length}
                     </div>
                   )}
                   
                   {/* Image overlay with price */}
-                  <div className="absolute bottom-3 left-3 right-3 md:bottom-4 md:left-4 md:right-4 flex items-end justify-between gap-2">
+                  <div className="absolute bottom-3 left-3 right-3 z-20 md:bottom-4 md:left-4 md:right-4 flex items-end justify-between gap-2">
                     <div className="px-3 py-1.5 md:px-4 md:py-2 rounded-xl bg-background/95 backdrop-blur-sm">
                       <span className="text-lg md:text-2xl font-bold text-accent">
                         {selectedListing.price.toLocaleString()} ₴/міс
