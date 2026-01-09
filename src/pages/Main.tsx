@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useTheme } from '@/hooks/useTheme';
-import { Sun, Moon, LogOut, Search, MapPin, Home, Building2, Filter, Lock, Bookmark, BookmarkCheck, X, Maximize2, Car, Phone, Calendar, CheckCircle, XCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Sun, Moon, LogOut, Search, MapPin, Home, Building2, Filter, Lock, Bookmark, BookmarkCheck, X, Maximize2, Car, Phone, Calendar, CheckCircle, XCircle, ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
@@ -826,10 +826,17 @@ export default function Main() {
                         }}
                       />
                       
-                      {/* Tap to fullscreen hint on mobile - positioned at top */}
-                      <div className="absolute top-4 right-4 z-20 px-2 py-1 rounded-full bg-background/80 backdrop-blur-sm text-xs text-foreground md:hidden">
-                        👆 Збільшити
-                      </div>
+                      {/* Zoom button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsFullscreenImage(true);
+                        }}
+                        className="absolute top-4 right-4 z-20 p-2 rounded-full bg-background/90 backdrop-blur-sm hover:bg-background transition-colors"
+                        aria-label="Збільшити зображення"
+                      >
+                        <ZoomIn className="w-5 h-5 text-foreground" />
+                      </button>
                       
                       {/* Navigation arrows - hidden on mobile, visible on desktop */}
                       {allImages.length > 1 && (
@@ -1055,7 +1062,7 @@ export default function Main() {
               </DialogContent>
             </Dialog>
 
-            {/* Fullscreen Image Modal for Mobile */}
+            {/* Fullscreen Image Modal */}
             {isFullscreenImage && selectedListing && (() => {
               const allImages = selectedListing.images?.length 
                 ? selectedListing.images 
@@ -1063,61 +1070,60 @@ export default function Main() {
               
               return (
                 <div 
-                  className="fixed inset-0 z-[200] bg-black flex items-center justify-center md:hidden touch-none"
+                  className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center touch-none"
+                  onClick={() => setIsFullscreenImage(false)}
                 >
                   <img
                     src={allImages[currentImageIndex]}
                     alt={`${selectedListing.title} - фото ${currentImageIndex + 1}`}
-                    className="w-full h-full object-contain pointer-events-none select-none"
+                    className="max-w-[95vw] max-h-[95vh] object-contain pointer-events-none select-none"
+                    onClick={(e) => e.stopPropagation()}
                   />
                   
-                  {/* Close button - more prominent + reliable on mobile */}
+                  {/* Close button */}
                   <button
                     type="button"
                     aria-label="Закрити"
-                    onPointerDown={(e) => {
-                      e.preventDefault();
+                    onClick={(e) => {
                       e.stopPropagation();
                       setIsFullscreenImage(false);
                     }}
-                    className="absolute top-5 right-5 p-4 rounded-full bg-destructive text-destructive-foreground shadow-2xl z-10 border-4 border-background pointer-events-auto touch-manipulation"
+                    className="absolute top-4 right-4 md:top-6 md:right-6 p-3 md:p-4 rounded-full bg-background/90 backdrop-blur-sm text-foreground shadow-2xl z-10 hover:bg-background transition-colors pointer-events-auto touch-manipulation"
                   >
-                    <X className="w-8 h-8" strokeWidth={3} />
+                    <X className="w-6 h-6 md:w-8 md:h-8" strokeWidth={2.5} />
                   </button>
                   
                   {/* Image counter */}
                   {allImages.length > 1 && (
-                    <div className="absolute top-5 left-5 px-4 py-2 rounded-full bg-background/90 text-foreground text-base font-bold shadow-lg pointer-events-none">
+                    <div className="absolute top-4 left-4 md:top-6 md:left-6 px-4 py-2 rounded-full bg-background/90 backdrop-blur-sm text-foreground text-sm md:text-base font-bold shadow-lg pointer-events-none">
                       {currentImageIndex + 1} / {allImages.length}
                     </div>
                   )}
                   
-                  {/* Navigation arrows for fullscreen - main controls */}
+                  {/* Navigation arrows for fullscreen */}
                   {allImages.length > 1 && (
                     <>
                       <button
                         type="button"
                         aria-label="Попереднє фото"
-                        onPointerDown={(e) => {
-                          e.preventDefault();
+                        onClick={(e) => {
                           e.stopPropagation();
                           goToPrevImage(allImages);
                         }}
-                        className="absolute left-6 top-1/2 -translate-y-1/2 p-4 rounded-full bg-background/95 text-foreground shadow-2xl z-10 border border-border pointer-events-auto touch-manipulation"
+                        className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 p-3 md:p-4 rounded-full bg-background/90 backdrop-blur-sm text-foreground shadow-2xl z-10 hover:bg-background transition-colors pointer-events-auto touch-manipulation"
                       >
-                        <ChevronLeft className="w-10 h-10" strokeWidth={3} />
+                        <ChevronLeft className="w-8 h-8 md:w-10 md:h-10" strokeWidth={2.5} />
                       </button>
                       <button
                         type="button"
                         aria-label="Наступне фото"
-                        onPointerDown={(e) => {
-                          e.preventDefault();
+                        onClick={(e) => {
                           e.stopPropagation();
                           goToNextImage(allImages);
                         }}
-                        className="absolute right-6 top-1/2 -translate-y-1/2 p-4 rounded-full bg-background/95 text-foreground shadow-2xl z-10 border border-border pointer-events-auto touch-manipulation"
+                        className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 p-3 md:p-4 rounded-full bg-background/90 backdrop-blur-sm text-foreground shadow-2xl z-10 hover:bg-background transition-colors pointer-events-auto touch-manipulation"
                       >
-                        <ChevronRight className="w-10 h-10" strokeWidth={3} />
+                        <ChevronRight className="w-8 h-8 md:w-10 md:h-10" strokeWidth={2.5} />
                       </button>
                     </>
                   )}
