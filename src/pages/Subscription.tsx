@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/useTheme';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { Sun, Moon, ArrowLeft, Check, Star } from 'lucide-react';
 
 const plans = [
@@ -67,16 +68,47 @@ export default function Subscription() {
   const handleProceedToPayment = async () => {
     setLoading(true);
 
-    // Simulate payment process - will be replaced with Stripe
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+      // Get current user email
+      const { data: { user } } = await supabase.auth.getUser();
+      const userEmail = user?.email || 'Невідомий';
 
-    toast({
-      title: 'Оплата успішна!',
-      description: 'Ваш план активовано.',
-    });
+      // Simulate payment process - will be replaced with Stripe
+      await new Promise((resolve) => setTimeout(resolve, 1500));
 
-    setLoading(false);
-    navigate('/main');
+      // Send Telegram notification for PRO subscriptions
+      if (selectedPlanData) {
+        try {
+          await supabase.functions.invoke('send-telegram-pro', {
+            body: {
+              email: userEmail,
+              planName: selectedPlanData.name,
+              price: selectedPlanData.price,
+              period: selectedPlanData.period,
+            },
+          });
+          console.log('PRO subscription notification sent');
+        } catch (telegramError) {
+          console.error('Failed to send Telegram notification:', telegramError);
+        }
+      }
+
+      toast({
+        title: 'Оплата успішна!',
+        description: 'Ваш план активовано.',
+      });
+
+      navigate('/main');
+    } catch (error) {
+      console.error('Payment error:', error);
+      toast({
+        title: 'Помилка',
+        description: 'Не вдалося обробити оплату.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const selectedPlanData = plans.find(p => p.id === selectedPlan);
