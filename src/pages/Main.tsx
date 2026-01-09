@@ -218,7 +218,7 @@ export default function Main() {
 
   const filteredListings = listings.filter((listing) => {
     if (!canUseFilters) return true; // Show all for basic plan (no filtering)
-    if (city && listing.city.toLowerCase() !== city.toLowerCase()) return false;
+    if (city && city !== 'all' && listing.city.toLowerCase() !== city.toLowerCase()) return false;
     if (minPrice && listing.price < parseInt(minPrice)) return false;
     if (maxPrice && listing.price > parseInt(maxPrice)) return false;
     if (rooms && listing.rooms !== parseInt(rooms)) return false;
@@ -441,7 +441,7 @@ export default function Main() {
                             <SelectValue placeholder="Оберіть місто" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">Всі міста</SelectItem>
+                            <SelectItem value="all">Всі міста</SelectItem>
                             <SelectItem value="Вінниця">Вінниця</SelectItem>
                             <SelectItem value="Дніпро">Дніпро</SelectItem>
                             <SelectItem value="Житомир">Житомир</SelectItem>
