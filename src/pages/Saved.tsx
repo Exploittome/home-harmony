@@ -315,7 +315,7 @@ export default function Saved() {
                   <img
                     src={allImages[currentImageIndex]}
                     alt={`${selectedListing.title} - фото ${currentImageIndex + 1}`}
-                    className="w-full h-full object-cover transition-opacity duration-300"
+                    className="w-full h-full object-contain bg-muted transition-opacity duration-300"
                   />
                   
                   {/* Tap to fullscreen hint on mobile */}
@@ -377,7 +377,7 @@ export default function Saved() {
                             : 'border-transparent opacity-60 hover:opacity-100'
                         }`}
                       >
-                        <img src={img} alt={`Мініатюра ${idx + 1}`} className="w-full h-full object-cover" />
+                        <img src={img} alt={`Мініатюра ${idx + 1}`} className="w-full h-full object-contain bg-muted" />
                       </button>
                     ))}
                   </div>
@@ -524,7 +524,7 @@ export default function Saved() {
               <img
                 src={allImages[currentImageIndex]}
                 alt={`${selectedListing.title} - фото ${currentImageIndex + 1}`}
-                className="max-w-full max-h-full object-contain pointer-events-none select-none"
+                className="w-full h-full object-contain pointer-events-none select-none"
               />
               
               {/* Close button */}
