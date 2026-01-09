@@ -221,7 +221,7 @@ export default function Saved() {
             {savedListings.map((item) => (
               <div key={item.id} className="card-container-hover overflow-hidden">
                 <div 
-                  className="relative aspect-[4/3] cursor-pointer"
+                  className="relative aspect-[4/3] cursor-pointer overflow-hidden bg-muted"
                   onClick={() => {
                     setSelectedListing(item.listing);
                     setCurrentImageIndex(0);
@@ -230,7 +230,10 @@ export default function Saved() {
                   <img
                     src={item.listing.image_url || 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=300&fit=crop'}
                     alt={item.listing.title}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=300&fit=crop';
+                    }}
                   />
                   <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-background/90 backdrop-blur-sm text-foreground font-semibold text-sm">
                     {item.listing.price.toLocaleString()} ₴/міс
@@ -316,6 +319,9 @@ export default function Saved() {
                     src={allImages[currentImageIndex]}
                     alt={`${selectedListing.title} - фото ${currentImageIndex + 1}`}
                     className="max-w-full max-h-full object-contain transition-opacity duration-300"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop';
+                    }}
                   />
                   
                   {/* Tap to fullscreen hint on mobile */}
@@ -377,7 +383,14 @@ export default function Saved() {
                             : 'border-transparent opacity-60 hover:opacity-100'
                         }`}
                       >
-                        <img src={img} alt={`Мініатюра ${idx + 1}`} className="w-full h-full object-contain bg-muted" />
+                        <img 
+                          src={img} 
+                          alt={`Мініатюра ${idx + 1}`} 
+                          className="w-full h-full object-cover bg-muted"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=100&h=75&fit=crop';
+                          }}
+                        />
                       </button>
                     ))}
                   </div>
