@@ -6,7 +6,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const TELEGRAM_BOT_TOKEN = Deno.env.get("TELEGRAM_PRO_BOT_TOKEN");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
@@ -27,31 +26,48 @@ interface TelegramUpdate {
   };
 }
 
+function getTelegramBotToken() {
+  const token = Deno.env.get("TELEGRAM_PRO_BOT_TOKEN");
+  if (!token) {
+    console.error("Missing TELEGRAM_PRO_BOT_TOKEN secret");
+  }
+  return token;
+}
+
+async function telegramApi(method: string, payload: Record<string, unknown>) {
+  const token = getTelegramBotToken();
+  if (!token) return { ok: false, description: "Missing bot token" };
+
+  const res = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  const json = await res.json().catch(() => ({ ok: false, description: "Invalid JSON from Telegram" }));
+
+  if (!res.ok || !json?.ok) {
+    console.error(`Telegram API error (${method}):`, json);
+  }
+
+  return json;
+}
+
 async function sendMessage(chatId: number, text: string, replyMarkup?: object) {
-  const body: Record<string, unknown> = {
+  const payload: Record<string, unknown> = {
     chat_id: chatId,
     text,
     parse_mode: "HTML",
   };
-  if (replyMarkup) {
-    body.reply_markup = replyMarkup;
-  }
+  if (replyMarkup) payload.reply_markup = replyMarkup;
 
-  await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
+  await telegramApi("sendMessage", payload);
 }
 
 async function answerCallbackQuery(callbackQueryId: string, text?: string) {
-  await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/answerCallbackQuery`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      callback_query_id: callbackQueryId,
-      text,
-    }),
+  await telegramApi("answerCallbackQuery", {
+    callback_query_id: callbackQueryId,
+    text,
   });
 }
 
