@@ -309,7 +309,7 @@ export default function Saved() {
               <div className="flex flex-col max-h-[90vh] overflow-y-auto">
                 {/* Image Carousel */}
                 <div 
-                  className="relative w-full h-[40vh] md:h-[50vh] bg-muted cursor-pointer md:cursor-default overflow-hidden flex items-center justify-center flex-shrink-0"
+                  className="relative w-full h-[40vh] md:h-[50vh] bg-muted cursor-pointer md:cursor-default overflow-hidden flex-shrink-0"
                   onClick={() => window.innerWidth < 768 && setIsFullscreenImage(true)}
                   onTouchStart={handleTouchStart}
                   onTouchMove={handleTouchMove}
@@ -318,7 +318,7 @@ export default function Saved() {
                   <img
                     src={allImages[currentImageIndex]}
                     alt={`${selectedListing.title} - фото ${currentImageIndex + 1}`}
-                    className="max-w-full max-h-full object-contain transition-opacity duration-300"
+                    className="w-full h-full object-cover transition-opacity duration-300"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop';
                     }}
