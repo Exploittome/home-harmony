@@ -701,11 +701,14 @@ export default function Main() {
               <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {displayedListings.map((listing) => (
                   <div key={listing.id} className="card-container-hover overflow-hidden">
-                    <div className="relative aspect-[4/3]">
+                    <div className="relative aspect-[4/3] overflow-hidden bg-muted">
                       <img
                         src={listing.image_url || 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=300&fit=crop'}
                         alt={listing.title}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=300&fit=crop';
+                        }}
                       />
                       <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-background/90 backdrop-blur-sm text-foreground font-semibold text-sm">
                         {listing.price.toLocaleString()} ₴/міс
@@ -788,6 +791,9 @@ export default function Main() {
                         src={allImages[currentImageIndex]}
                         alt={`${selectedListing.title} - фото ${currentImageIndex + 1}`}
                         className="max-w-full max-h-full object-contain transition-opacity duration-300"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop';
+                        }}
                       />
                       
                       {/* Tap to fullscreen hint on mobile */}
@@ -872,7 +878,14 @@ export default function Main() {
                                 : 'border-transparent opacity-60 hover:opacity-100'
                             }`}
                           >
-                            <img src={img} alt={`Мініатюра ${idx + 1}`} className="w-full h-full object-contain bg-muted" />
+                            <img 
+                              src={img} 
+                              alt={`Мініатюра ${idx + 1}`} 
+                              className="w-full h-full object-cover bg-muted" 
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=100&h=75&fit=crop';
+                              }}
+                            />
                           </button>
                         ))}
                       </div>
