@@ -307,7 +307,7 @@ export default function Main() {
     if (minPrice && listing.price < parseInt(minPrice)) return false;
     if (maxPrice && listing.price > parseInt(maxPrice)) return false;
     if (rooms && listing.rooms !== parseInt(rooms)) return false;
-    if (propertyType) {
+    if (propertyType && propertyType !== 'all') {
       const titleLower = listing.title.toLowerCase();
       const descLower = (listing.description || '').toLowerCase();
       const searchText = titleLower + ' ' + descLower;
@@ -628,6 +628,7 @@ export default function Main() {
                             <SelectValue placeholder="Оберіть тип" />
                           </SelectTrigger>
                           <SelectContent>
+                            <SelectItem value="all">Всі типи</SelectItem>
                             <SelectItem value="apartment">Квартира</SelectItem>
                             <SelectItem value="house">Будинок</SelectItem>
                             <SelectItem value="studio">Студія</SelectItem>
@@ -789,6 +790,11 @@ export default function Main() {
             {listingsLoading ? (
               <div className="text-center py-12">
                 <p className="text-muted-foreground">Завантаження оголошень...</p>
+              </div>
+            ) : displayedListings.length === 0 ? (
+              <div className="text-center py-12 bg-muted/30 rounded-xl">
+                <p className="text-muted-foreground text-lg">Нічого не знайдено за вашими фільтрами</p>
+                <p className="text-sm text-muted-foreground mt-2">Спробуйте змінити параметри пошуку</p>
               </div>
             ) : (
               <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
