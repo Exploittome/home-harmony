@@ -309,10 +309,16 @@ export default function Main() {
     if (rooms && listing.rooms !== parseInt(rooms)) return false;
     if (propertyType) {
       // Filter by property type based on rooms count
-      if (propertyType === 'apartment' && (listing.rooms === null || listing.rooms < 2 || listing.rooms > 5)) return false;
-      if (propertyType === 'house' && (listing.rooms === null || listing.rooms < 4)) return false;
-      if (propertyType === 'studio' && listing.rooms !== 1) return false;
-      if (propertyType === 'room' && listing.rooms !== null) return false;
+      if (propertyType === 'studio') {
+        if (listing.rooms !== 1) return false;
+      } else if (propertyType === 'apartment') {
+        if (listing.rooms === null || listing.rooms < 2 || listing.rooms > 3) return false;
+      } else if (propertyType === 'house') {
+        if (listing.rooms === null || listing.rooms < 4) return false;
+      } else if (propertyType === 'room') {
+        // "Кімната" - listings without rooms specified (null)
+        if (listing.rooms !== null) return false;
+      }
     }
     // Area filter
     if (minArea && (listing.area === null || listing.area < parseFloat(minArea))) return false;
