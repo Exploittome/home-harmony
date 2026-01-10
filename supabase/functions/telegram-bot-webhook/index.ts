@@ -71,39 +71,20 @@ async function answerCallbackQuery(callbackQueryId: string, text?: string) {
   });
 }
 
-// Full list of Ukrainian cities for subscription
-const AVAILABLE_CITIES = [
-  "Київ",
-  "Харків", 
-  "Одеса",
-  "Дніпро",
-  "Запоріжжя",
-  "Львів",
-  "Кривий Ріг",
-  "Миколаїв",
-  "Вінниця",
-  "Полтава",
-  "Чернігів",
-  "Черкаси",
-  "Хмельницький",
-  "Житомир",
-  "Суми",
-  "Рівне",
-  "Івано-Франківськ",
-  "Тернопіль",
-  "Луцьк",
-  "Кропивницький",
-  "Ужгород",
-  "Чернівці",
-  "Кам'янець-Подільський",
-  "Біла Церква",
-  "Кременчук",
-  "Маріуполь",
-  "Краматорськ"
-];
+// Get cities from database
+async function getCitiesFromDatabase(): Promise<string[]> {
+  const { data, error } = await supabase
+    .from("listings")
+    .select("city");
 
-function getAvailableCities(): string[] {
-  return AVAILABLE_CITIES;
+  if (error || !data) {
+    console.error("Error fetching cities:", error);
+    return [];
+  }
+
+  // Get unique cities sorted alphabetically
+  const uniqueCities = [...new Set(data.map((l) => l.city))].sort();
+  return uniqueCities;
 }
 
 async function getUserSubscription(chatId: number) {
@@ -225,7 +206,7 @@ serve(async (req) => {
       }
 
       if (text === "/city") {
-        const cities = getAvailableCities();
+        const cities = await getCitiesFromDatabase();
 
         if (cities.length === 0) {
           await sendMessage(chatId, "😔 Наразі немає доступних міст. Спробуйте пізніше.");
