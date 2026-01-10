@@ -174,6 +174,7 @@ export default function Main() {
   const [city, setCity] = useState('');
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
+  const [availableCities, setAvailableCities] = useState<string[]>([]);
   const [rooms, setRooms] = useState('');
   const [propertyType, setPropertyType] = useState('');
   const [minArea, setMinArea] = useState('');
@@ -229,8 +230,21 @@ export default function Main() {
     setPlanLoading(false);
   };
 
+  // Fetch available cities from database
+  const fetchCities = async () => {
+    const { data, error } = await supabase
+      .from('listings')
+      .select('city');
+
+    if (!error && data) {
+      const uniqueCities = [...new Set(data.map(l => l.city))].sort();
+      setAvailableCities(uniqueCities);
+    }
+  };
+
   useEffect(() => {
     fetchListings();
+    fetchCities();
     
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
@@ -513,32 +527,9 @@ export default function Main() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="all">Всі міста</SelectItem>
-                            <SelectItem value="Вінниця">Вінниця</SelectItem>
-                            <SelectItem value="Дніпро">Дніпро</SelectItem>
-                            <SelectItem value="Житомир">Житомир</SelectItem>
-                            <SelectItem value="Запоріжжя">Запоріжжя</SelectItem>
-                            <SelectItem value="Івано-Франківськ">Івано-Франківськ</SelectItem>
-                            <SelectItem value="Калинівка">Калинівка</SelectItem>
-                            <SelectItem value="Київ">Київ</SelectItem>
-                            <SelectItem value="Кропивницький">Кропивницький</SelectItem>
-                            <SelectItem value="Луцьк">Луцьк</SelectItem>
-                            <SelectItem value="Львів">Львів</SelectItem>
-                            <SelectItem value="Миколаїв">Миколаїв</SelectItem>
-                            <SelectItem value="Могилів-Подільський">Могилів-Подільський</SelectItem>
-                            <SelectItem value="Одеса">Одеса</SelectItem>
-                            <SelectItem value="Полтава">Полтава</SelectItem>
-                            <SelectItem value="Рівне">Рівне</SelectItem>
-                            <SelectItem value="Стрижавка">Стрижавка</SelectItem>
-                            <SelectItem value="Суми">Суми</SelectItem>
-                            <SelectItem value="Тернопіль">Тернопіль</SelectItem>
-                            <SelectItem value="Ужгород">Ужгород</SelectItem>
-                            <SelectItem value="Харків">Харків</SelectItem>
-                            <SelectItem value="Херсон">Херсон</SelectItem>
-                            <SelectItem value="Хмельницький">Хмельницький</SelectItem>
-                            <SelectItem value="Хмільник">Хмільник</SelectItem>
-                            <SelectItem value="Черкаси">Черкаси</SelectItem>
-                            <SelectItem value="Чернівці">Чернівці</SelectItem>
-                            <SelectItem value="Чернігів">Чернігів</SelectItem>
+                            {availableCities.map((cityName) => (
+                              <SelectItem key={cityName} value={cityName}>{cityName}</SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>
