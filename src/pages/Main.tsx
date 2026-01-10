@@ -308,16 +308,18 @@ export default function Main() {
     if (maxPrice && listing.price > parseInt(maxPrice)) return false;
     if (rooms && listing.rooms !== parseInt(rooms)) return false;
     if (propertyType) {
-      // Filter by property type based on rooms count
-      if (propertyType === 'studio') {
-        if (listing.rooms !== 1) return false;
-      } else if (propertyType === 'apartment') {
-        if (listing.rooms === null || listing.rooms < 2 || listing.rooms > 3) return false;
+      const titleLower = listing.title.toLowerCase();
+      const descLower = (listing.description || '').toLowerCase();
+      const searchText = titleLower + ' ' + descLower;
+      
+      if (propertyType === 'apartment') {
+        if (!searchText.includes('квартир')) return false;
       } else if (propertyType === 'house') {
-        if (listing.rooms === null || listing.rooms < 4) return false;
+        if (!searchText.includes('будин') && !searchText.includes('дім') && !searchText.includes('котедж')) return false;
+      } else if (propertyType === 'studio') {
+        if (!searchText.includes('студі')) return false;
       } else if (propertyType === 'room') {
-        // "Кімната" - listings without rooms specified (null)
-        if (listing.rooms !== null) return false;
+        if (!searchText.includes('кімнат') || searchText.includes('квартир')) return false;
       }
     }
     // Area filter
