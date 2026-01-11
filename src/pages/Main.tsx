@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, TouchEvent } from 'react';
+import { useState, useEffect, useRef, TouchEvent, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -111,11 +112,31 @@ export default function Main() {
     setIsDragging(false);
   };
   
-  const closeFullscreen = () => {
+  const closeFullscreen = useCallback(() => {
     setIsFullscreenImage(false);
     setZoomLevel(1);
     setImagePosition({ x: 0, y: 0 });
-  };
+    setIsDragging(false);
+  }, []);
+  
+  // Handle Escape key to close fullscreen
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isFullscreenImage) {
+        closeFullscreen();
+      }
+    };
+    
+    if (isFullscreenImage) {
+      document.addEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'hidden';
+    }
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [isFullscreenImage, closeFullscreen]);
   
   // Touch swipe handling
   const touchStartX = useRef<number | null>(null);
@@ -1139,141 +1160,145 @@ export default function Main() {
               </DialogContent>
             </Dialog>
 
-            {/* Fullscreen Image Modal */}
-            {isFullscreenImage && selectedListing && (() => {
-              const allImages = selectedListing.images?.length 
-                ? selectedListing.images 
-                : [selectedListing.image_url || 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1200&h=800&fit=crop'];
-              
-              return (
-                <div 
-                  className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center touch-none overflow-hidden"
-                  onClick={() => {
-                    if (zoomLevel === 1) {
-                      closeFullscreen();
-                    }
-                  }}
-                  onWheel={handleZoomWheel}
-                  onMouseMove={handleImageMouseMove}
-                  onMouseUp={handleImageMouseUp}
-                  onMouseLeave={handleImageMouseUp}
-                >
-                  <img
-                    src={allImages[currentImageIndex]}
-                    alt={`${selectedListing.title} - фото ${currentImageIndex + 1}`}
-                    className={`max-w-[95vw] max-h-[95vh] object-contain select-none transition-transform duration-200 ${
-                      zoomLevel > 1 ? 'cursor-grab' : ''
-                    } ${isDragging ? 'cursor-grabbing' : ''}`}
-                    style={{
-                      transform: `scale(${zoomLevel}) translate(${imagePosition.x / zoomLevel}px, ${imagePosition.y / zoomLevel}px)`,
-                      pointerEvents: zoomLevel > 1 ? 'auto' : 'none'
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                    onMouseDown={handleImageMouseDown}
-                    draggable={false}
-                  />
-                  
-                  {/* Close button */}
-                  <button
-                    type="button"
-                    aria-label="Закрити"
+            {/* Fullscreen Image Modal - rendered via Portal */}
+            {isFullscreenImage && selectedListing && createPortal(
+              (() => {
+                const allImages = selectedListing.images?.length 
+                  ? selectedListing.images 
+                  : [selectedListing.image_url || 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1200&h=800&fit=crop'];
+                
+                return (
+                  <div 
+                    className="fixed inset-0 z-[9999] bg-black flex items-center justify-center touch-none overflow-hidden"
                     onClick={(e) => {
-                      e.stopPropagation();
-                      closeFullscreen();
+                      // Only close if clicking the backdrop, not any child element
+                      if (e.target === e.currentTarget && zoomLevel === 1) {
+                        closeFullscreen();
+                      }
                     }}
-                    className="absolute top-4 right-4 md:top-6 md:right-6 p-3 md:p-4 rounded-full bg-background/90 backdrop-blur-sm text-foreground shadow-2xl z-10 hover:bg-background transition-colors pointer-events-auto touch-manipulation"
+                    onWheel={handleZoomWheel}
+                    onMouseMove={handleImageMouseMove}
+                    onMouseUp={handleImageMouseUp}
+                    onMouseLeave={handleImageMouseUp}
                   >
-                    <X className="w-6 h-6 md:w-8 md:h-8" strokeWidth={2.5} />
-                  </button>
-                  
-                  {/* Image counter */}
-                  {allImages.length > 1 && (
-                    <div className="absolute top-4 left-4 md:top-6 md:left-6 px-4 py-2 rounded-full bg-background/90 backdrop-blur-sm text-foreground text-sm md:text-base font-bold shadow-lg pointer-events-none">
-                      {currentImageIndex + 1} / {allImages.length}
-                    </div>
-                  )}
-                  
-                  {/* Zoom controls - desktop only */}
-                  <div className="hidden md:flex absolute bottom-6 left-1/2 -translate-x-1/2 items-center gap-2 px-4 py-2 rounded-full bg-background/90 backdrop-blur-sm shadow-2xl z-10 pointer-events-auto">
+                    <img
+                      src={allImages[currentImageIndex]}
+                      alt={`${selectedListing.title} - фото ${currentImageIndex + 1}`}
+                      className={`max-w-[95vw] max-h-[95vh] object-contain select-none transition-transform duration-200 ${
+                        zoomLevel > 1 ? 'cursor-grab' : ''
+                      } ${isDragging ? 'cursor-grabbing' : ''}`}
+                      style={{
+                        transform: `scale(${zoomLevel}) translate(${imagePosition.x / zoomLevel}px, ${imagePosition.y / zoomLevel}px)`,
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      onMouseDown={handleImageMouseDown}
+                      draggable={false}
+                    />
+                    
+                    {/* Close button */}
                     <button
                       type="button"
-                      aria-label="Зменшити"
+                      aria-label="Закрити"
                       onClick={(e) => {
+                        e.preventDefault();
                         e.stopPropagation();
-                        handleZoomOut();
+                        closeFullscreen();
                       }}
-                      disabled={zoomLevel <= 1}
-                      className="p-2 rounded-full hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="absolute top-4 right-4 md:top-6 md:right-6 p-3 md:p-4 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-900 dark:text-white shadow-2xl z-50 hover:bg-white dark:hover:bg-gray-700 transition-colors"
                     >
-                      <ZoomOut className="w-5 h-5 text-foreground" />
+                      <X className="w-6 h-6 md:w-8 md:h-8" strokeWidth={2.5} />
                     </button>
-                    <span className="text-sm font-medium text-foreground min-w-[3rem] text-center">
-                      {Math.round(zoomLevel * 100)}%
-                    </span>
-                    <button
-                      type="button"
-                      aria-label="Збільшити"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleZoomIn();
-                      }}
-                      disabled={zoomLevel >= 4}
-                      className="p-2 rounded-full hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                    >
-                      <ZoomIn className="w-5 h-5 text-foreground" />
-                    </button>
-                    {zoomLevel > 1 && (
+                    
+                    {/* Image counter */}
+                    {allImages.length > 1 && (
+                      <div className="absolute top-4 left-4 md:top-6 md:left-6 px-4 py-2 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-900 dark:text-white text-sm md:text-base font-bold shadow-lg pointer-events-none">
+                        {currentImageIndex + 1} / {allImages.length}
+                      </div>
+                    )}
+                    
+                    {/* Zoom controls - desktop only */}
+                    <div className="hidden md:flex absolute bottom-6 left-1/2 -translate-x-1/2 items-center gap-2 px-4 py-2 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-2xl z-50">
                       <button
                         type="button"
-                        aria-label="Скинути масштаб"
+                        aria-label="Зменшити"
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleResetZoom();
+                          handleZoomOut();
                         }}
-                        className="p-2 rounded-full hover:bg-muted transition-colors ml-2 border-l border-border pl-4"
+                        disabled={zoomLevel <= 1}
+                        className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                       >
-                        <RotateCcw className="w-5 h-5 text-foreground" />
+                        <ZoomOut className="w-5 h-5 text-gray-900 dark:text-white" />
                       </button>
+                      <span className="text-sm font-medium text-gray-900 dark:text-white min-w-[3rem] text-center">
+                        {Math.round(zoomLevel * 100)}%
+                      </span>
+                      <button
+                        type="button"
+                        aria-label="Збільшити"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleZoomIn();
+                        }}
+                        disabled={zoomLevel >= 4}
+                        className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        <ZoomIn className="w-5 h-5 text-gray-900 dark:text-white" />
+                      </button>
+                      {zoomLevel > 1 && (
+                        <button
+                          type="button"
+                          aria-label="Скинути масштаб"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleResetZoom();
+                          }}
+                          className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors ml-2 border-l border-gray-300 dark:border-gray-600 pl-4"
+                        >
+                          <RotateCcw className="w-5 h-5 text-gray-900 dark:text-white" />
+                        </button>
+                      )}
+                    </div>
+                    
+                    {/* Zoom hint */}
+                    {zoomLevel === 1 && (
+                      <div className="hidden md:block absolute bottom-20 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm text-gray-900 dark:text-white text-sm pointer-events-none">
+                        Використовуйте коліщатко миші або кнопки для масштабування
+                      </div>
+                    )}
+                    
+                    {/* Navigation arrows for fullscreen */}
+                    {allImages.length > 1 && zoomLevel === 1 && (
+                      <>
+                        <button
+                          type="button"
+                          aria-label="Попереднє фото"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            goToPrevImage(allImages);
+                          }}
+                          className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 p-3 md:p-4 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-900 dark:text-white shadow-2xl z-50 hover:bg-white dark:hover:bg-gray-700 transition-colors"
+                        >
+                          <ChevronLeft className="w-8 h-8 md:w-10 md:h-10" strokeWidth={2.5} />
+                        </button>
+                        <button
+                          type="button"
+                          aria-label="Наступне фото"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            goToNextImage(allImages);
+                          }}
+                          className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 p-3 md:p-4 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-900 dark:text-white shadow-2xl z-50 hover:bg-white dark:hover:bg-gray-700 transition-colors"
+                        >
+                          <ChevronRight className="w-8 h-8 md:w-10 md:h-10" strokeWidth={2.5} />
+                        </button>
+                      </>
                     )}
                   </div>
-                  
-                  {/* Zoom hint */}
-                  {zoomLevel === 1 && (
-                    <div className="hidden md:block absolute bottom-20 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-background/70 backdrop-blur-sm text-foreground text-sm pointer-events-none">
-                      Використовуйте коліщатко миші або кнопки для масштабування
-                    </div>
-                  )}
-                  
-                  {/* Navigation arrows for fullscreen */}
-                  {allImages.length > 1 && zoomLevel === 1 && (
-                    <>
-                      <button
-                        type="button"
-                        aria-label="Попереднє фото"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          goToPrevImage(allImages);
-                        }}
-                        className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 p-3 md:p-4 rounded-full bg-background/90 backdrop-blur-sm text-foreground shadow-2xl z-10 hover:bg-background transition-colors pointer-events-auto touch-manipulation"
-                      >
-                        <ChevronLeft className="w-8 h-8 md:w-10 md:h-10" strokeWidth={2.5} />
-                      </button>
-                      <button
-                        type="button"
-                        aria-label="Наступне фото"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          goToNextImage(allImages);
-                        }}
-                        className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 p-3 md:p-4 rounded-full bg-background/90 backdrop-blur-sm text-foreground shadow-2xl z-10 hover:bg-background transition-colors pointer-events-auto touch-manipulation"
-                      >
-                        <ChevronRight className="w-8 h-8 md:w-10 md:h-10" strokeWidth={2.5} />
-                      </button>
-                    </>
-                  )}
-                </div>
-              );
-            })()}
+                );
+              })(),
+              document.body
+            )}
 
             {displayedListings.length === 0 && (
               <div className="card-container p-12 text-center">
