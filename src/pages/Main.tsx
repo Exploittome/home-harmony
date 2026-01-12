@@ -119,11 +119,23 @@ export default function Main() {
     setIsDragging(false);
   }, []);
   
-  // Handle Escape key to close fullscreen
+  // Handle Escape and Arrow keys for fullscreen navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isFullscreenImage) {
+      if (!isFullscreenImage || !selectedListing) return;
+      
+      const allImages = selectedListing.images?.length 
+        ? selectedListing.images 
+        : [selectedListing.image_url || ''];
+      
+      if (e.key === 'Escape') {
         closeFullscreen();
+      } else if (e.key === 'ArrowLeft' && zoomLevel === 1) {
+        e.preventDefault();
+        setCurrentImageIndex(prev => prev === 0 ? allImages.length - 1 : prev - 1);
+      } else if (e.key === 'ArrowRight' && zoomLevel === 1) {
+        e.preventDefault();
+        setCurrentImageIndex(prev => prev === allImages.length - 1 ? 0 : prev + 1);
       }
     };
     
@@ -136,27 +148,52 @@ export default function Main() {
       document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = '';
     };
-  }, [isFullscreenImage, closeFullscreen]);
+  }, [isFullscreenImage, closeFullscreen, selectedListing, zoomLevel]);
   
-  // Touch swipe handling
+  // Touch swipe handling - improved to not block vertical scroll
   const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
-  const isSwiping = useRef<boolean>(false);
+  const touchEndY = useRef<number | null>(null);
+  const isHorizontalSwipe = useRef<boolean | null>(null);
   
   const handleTouchStart = (e: TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
     touchEndX.current = e.touches[0].clientX;
-    isSwiping.current = true;
+    touchEndY.current = e.touches[0].clientY;
+    isHorizontalSwipe.current = null;
   };
   
   const handleTouchMove = (e: TouchEvent) => {
-    if (isSwiping.current) {
-      touchEndX.current = e.touches[0].clientX;
+    if (touchStartX.current === null || touchStartY.current === null) return;
+    
+    touchEndX.current = e.touches[0].clientX;
+    touchEndY.current = e.touches[0].clientY;
+    
+    // Determine swipe direction on first significant move
+    if (isHorizontalSwipe.current === null) {
+      const deltaX = Math.abs(touchEndX.current - touchStartX.current);
+      const deltaY = Math.abs(touchEndY.current - touchStartY.current);
+      
+      if (deltaX > 10 || deltaY > 10) {
+        isHorizontalSwipe.current = deltaX > deltaY;
+      }
     }
   };
   
   const handleTouchEnd = (allImages: string[]) => {
-    if (!isSwiping.current || touchStartX.current === null || touchEndX.current === null) {
+    if (touchStartX.current === null || touchEndX.current === null) {
+      return;
+    }
+    
+    // Only process horizontal swipes
+    if (isHorizontalSwipe.current !== true) {
+      touchStartX.current = null;
+      touchStartY.current = null;
+      touchEndX.current = null;
+      touchEndY.current = null;
+      isHorizontalSwipe.current = null;
       return;
     }
     
@@ -174,8 +211,10 @@ export default function Main() {
     }
     
     touchStartX.current = null;
+    touchStartY.current = null;
     touchEndX.current = null;
-    isSwiping.current = false;
+    touchEndY.current = null;
+    isHorizontalSwipe.current = null;
   };
   
   // Navigation functions for fullscreen
@@ -821,7 +860,13 @@ export default function Main() {
               <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {displayedListings.map((listing) => (
                   <div key={listing.id} className="card-container-hover overflow-hidden">
-                    <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+                    <div 
+                      className="relative aspect-[4/3] overflow-hidden bg-muted cursor-pointer"
+                      onClick={() => {
+                        setSelectedListing(listing);
+                        setCurrentImageIndex(0);
+                      }}
+                    >
                       <img
                         src={listing.image_url || 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=300&fit=crop'}
                         alt={listing.title}
@@ -835,7 +880,10 @@ export default function Main() {
                       </div>
                       {userPlan === 'plan_30_days' && (
                         <button
-                          onClick={() => handleSaveListing(listing.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSaveListing(listing.id);
+                          }}
                           className="absolute top-3 left-3 p-2 rounded-full bg-background/90 backdrop-blur-sm hover:bg-background transition-colors"
                         >
                           {savedIds.has(listing.id) ? (
@@ -898,11 +946,10 @@ export default function Main() {
                     : [selectedListing.image_url || 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1200&h=800&fit=crop'];
                   
                   return (
-                  <div className="flex flex-col max-h-[100dvh] md:max-h-[90vh] overflow-y-auto">
+                  <div className="flex flex-col max-h-[100dvh] md:max-h-[90vh] overflow-y-auto overscroll-contain">
                     {/* Image Carousel */}
                     <div 
-                      className="relative w-full h-[35vh] md:h-[46vh] bg-muted cursor-pointer md:cursor-default overflow-hidden flex-shrink-0"
-                      onClick={() => window.innerWidth < 768 && setIsFullscreenImage(true)}
+                      className="relative w-full h-[35vh] md:h-[46vh] bg-muted overflow-hidden flex-shrink-0"
                       onTouchStart={handleTouchStart}
                       onTouchMove={handleTouchMove}
                       onTouchEnd={() => handleTouchEnd(allImages)}
@@ -924,19 +971,19 @@ export default function Main() {
                         }}
                       />
                       
-                      {/* Zoom button */}
+                      {/* Zoom button - positioned to avoid overlap with Dialog close */}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           setIsFullscreenImage(true);
                         }}
-                        className="absolute top-4 right-4 z-20 p-2 rounded-full bg-background/90 backdrop-blur-sm hover:bg-background transition-colors"
+                        className="absolute top-4 right-16 z-20 p-2 rounded-full bg-background/90 backdrop-blur-sm hover:bg-background transition-colors"
                         aria-label="Збільшити зображення"
                       >
                         <ZoomIn className="w-5 h-5 text-foreground" />
                       </button>
                       
-                      {/* Navigation arrows - hidden on mobile, visible on desktop */}
+                      {/* Navigation arrows - visible on all devices when multiple images */}
                       {allImages.length > 1 && (
                         <>
                           <button
@@ -944,7 +991,7 @@ export default function Main() {
                               e.stopPropagation();
                               setCurrentImageIndex(prev => prev === 0 ? allImages.length - 1 : prev - 1);
                             }}
-                            className="hidden md:flex absolute left-3 top-1/2 z-20 -translate-y-1/2 p-2 rounded-full bg-background/90 backdrop-blur-sm hover:bg-background transition-colors"
+                            className="absolute left-3 top-1/2 z-20 -translate-y-1/2 p-2 rounded-full bg-background/90 backdrop-blur-sm hover:bg-background transition-colors"
                           >
                             <ChevronLeft className="w-6 h-6 text-foreground" />
                           </button>
@@ -953,7 +1000,7 @@ export default function Main() {
                               e.stopPropagation();
                               setCurrentImageIndex(prev => prev === allImages.length - 1 ? 0 : prev + 1);
                             }}
-                            className="hidden md:flex absolute right-3 top-1/2 z-20 -translate-y-1/2 p-2 rounded-full bg-background/90 backdrop-blur-sm hover:bg-background transition-colors"
+                            className="absolute right-3 top-1/2 z-20 -translate-y-1/2 p-2 rounded-full bg-background/90 backdrop-blur-sm hover:bg-background transition-colors"
                           >
                             <ChevronRight className="w-6 h-6 text-foreground" />
                           </button>
