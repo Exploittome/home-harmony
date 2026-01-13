@@ -38,7 +38,7 @@ export default function Saved() {
   const [loading, setLoading] = useState(true);
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isFullscreenImage, setIsFullscreenImage] = useState(false);
+
 
   // Touch swipe handling
   const touchStartX = useRef<number | null>(null);
@@ -309,8 +309,7 @@ export default function Saved() {
               <div className="flex flex-col max-h-[100dvh] md:max-h-[90vh] overflow-y-auto">
                 {/* Image Carousel */}
                 <div 
-                  className="relative w-full h-[35vh] md:h-[46vh] bg-muted cursor-pointer md:cursor-default overflow-hidden flex-shrink-0"
-                  onClick={() => window.innerWidth < 768 && setIsFullscreenImage(true)}
+                  className="relative w-full h-[35vh] md:h-[46vh] bg-muted overflow-hidden flex-shrink-0"
                   onTouchStart={handleTouchStart}
                   onTouchMove={handleTouchMove}
                   onTouchEnd={() => handleTouchEnd(allImages)}
@@ -332,10 +331,6 @@ export default function Saved() {
                     }}
                   />
                   
-                  {/* Tap to fullscreen hint on mobile - positioned at top */}
-                  <div className="absolute top-4 right-4 z-20 px-2 py-1 rounded-full bg-background/80 backdrop-blur-sm text-xs text-foreground md:hidden">
-                    👆 Збільшити
-                  </div>
                   
                   {/* Navigation arrows */}
                   {allImages.length > 1 && (
@@ -532,75 +527,6 @@ export default function Saved() {
           </DialogContent>
         </Dialog>
 
-        {/* Fullscreen Image Modal for Mobile */}
-        {isFullscreenImage && selectedListing && (() => {
-          const allImages = selectedListing.images?.length 
-            ? selectedListing.images 
-            : [selectedListing.image_url || 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1200&h=800&fit=crop'];
-          
-          return (
-            <div 
-              className="fixed inset-0 z-[200] bg-black flex items-center justify-center md:hidden touch-none"
-            >
-              <img
-                src={allImages[currentImageIndex]}
-                alt={`${selectedListing.title} - фото ${currentImageIndex + 1}`}
-                className="w-full h-full object-contain pointer-events-none select-none"
-              />
-              
-              {/* Close button */}
-              <button
-                type="button"
-                aria-label="Закрити"
-                onPointerDown={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setIsFullscreenImage(false);
-                }}
-                className="absolute top-5 right-5 p-4 rounded-full bg-destructive text-destructive-foreground shadow-2xl z-10 border-4 border-background pointer-events-auto touch-manipulation"
-              >
-                <X className="w-8 h-8" strokeWidth={3} />
-              </button>
-              
-              {/* Image counter */}
-              {allImages.length > 1 && (
-                <div className="absolute top-5 left-5 px-4 py-2 rounded-full bg-background/90 text-foreground text-base font-bold shadow-lg pointer-events-none">
-                  {currentImageIndex + 1} / {allImages.length}
-                </div>
-              )}
-              
-              {/* Navigation arrows for fullscreen */}
-              {allImages.length > 1 && (
-                <>
-                  <button
-                    type="button"
-                    aria-label="Попереднє фото"
-                    onPointerDown={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      goToPrevImage(allImages);
-                    }}
-                    className="absolute left-6 top-1/2 -translate-y-1/2 p-4 rounded-full bg-background/95 text-foreground shadow-2xl z-10 border border-border pointer-events-auto touch-manipulation"
-                  >
-                    <ChevronLeft className="w-10 h-10" strokeWidth={3} />
-                  </button>
-                  <button
-                    type="button"
-                    aria-label="Наступне фото"
-                    onPointerDown={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      goToNextImage(allImages);
-                    }}
-                    className="absolute right-6 top-1/2 -translate-y-1/2 p-4 rounded-full bg-background/95 text-foreground shadow-2xl z-10 border border-border pointer-events-auto touch-manipulation"
-                  >
-                    <ChevronRight className="w-10 h-10" strokeWidth={3} />
-                  </button>
-                </>
-              )}
-            </div>
-          );
-        })()}
       </div>
     </div>
   );
