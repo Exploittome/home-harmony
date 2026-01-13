@@ -1,5 +1,4 @@
-import { useState, useEffect, useRef, TouchEvent, useCallback } from 'react';
-import { createPortal } from 'react-dom';
+import { useState, useEffect, useRef, TouchEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -45,43 +44,9 @@ export default function Main() {
   const [listingsLoading, setListingsLoading] = useState(true);
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isFullscreenImage, setIsFullscreenImage] = useState(false);
-  
-  const closeFullscreen = useCallback(() => {
-    setIsFullscreenImage(false);
-  }, []);
-  
-  // Handle Escape and Arrow keys for fullscreen navigation
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!isFullscreenImage || !selectedListing) return;
-      
-      const allImages = selectedListing.images?.length 
-        ? selectedListing.images 
-        : [selectedListing.image_url || ''];
-      
-      if (e.key === 'Escape') {
-        closeFullscreen();
-      } else if (e.key === 'ArrowLeft') {
-        e.preventDefault();
-        setCurrentImageIndex(prev => prev === 0 ? allImages.length - 1 : prev - 1);
-      } else if (e.key === 'ArrowRight') {
-        e.preventDefault();
-        setCurrentImageIndex(prev => prev === allImages.length - 1 ? 0 : prev + 1);
-      }
-    };
-    
-    if (isFullscreenImage) {
-      document.addEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = 'hidden';
-    }
-    
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = '';
-    };
-  }, [isFullscreenImage, closeFullscreen, selectedListing]);
-  
+
+  // (Fullscreen/zoom вимкнено — лишаємо тільки карусель у модалці)
+
   // Touch swipe handling - improved to not block vertical scroll
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
@@ -903,17 +868,6 @@ export default function Main() {
                         }}
                       />
                       
-                      {/* Fullscreen button - positioned to avoid overlap with Dialog close */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setIsFullscreenImage(true);
-                        }}
-                        className="absolute top-4 right-16 z-20 p-2 rounded-full bg-background/90 backdrop-blur-sm hover:bg-background transition-colors"
-                        aria-label="На весь екран"
-                      >
-                        <Maximize2 className="w-5 h-5 text-foreground" />
-                      </button>
                       
                       {/* Navigation arrows - visible on all devices when multiple images */}
                       {allImages.length > 1 && (
@@ -1139,83 +1093,6 @@ export default function Main() {
               </DialogContent>
             </Dialog>
 
-            {/* Fullscreen Image Modal - rendered via Portal */}
-            {isFullscreenImage && selectedListing && createPortal(
-              (() => {
-                const allImages = selectedListing.images?.length 
-                  ? selectedListing.images 
-                  : [selectedListing.image_url || 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1200&h=800&fit=crop'];
-                
-                return (
-                  <div 
-                    className="fixed inset-0 z-[9999] bg-black flex items-center justify-center touch-none overflow-hidden"
-                    onClick={(e) => {
-                      if (e.target === e.currentTarget) {
-                        closeFullscreen();
-                      }
-                    }}
-                  >
-                    <img
-                      src={allImages[currentImageIndex]}
-                      alt={`${selectedListing.title} - фото ${currentImageIndex + 1}`}
-                      className="max-w-[95vw] max-h-[95vh] object-contain select-none"
-                      onClick={(e) => e.stopPropagation()}
-                      draggable={false}
-                    />
-                    
-                    {/* Close button */}
-                    <button
-                      type="button"
-                      aria-label="Закрити"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        closeFullscreen();
-                      }}
-                      className="absolute top-4 right-4 md:top-6 md:right-6 p-3 md:p-4 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-900 dark:text-white shadow-2xl z-50 hover:bg-white dark:hover:bg-gray-700 transition-colors"
-                    >
-                      <X className="w-6 h-6 md:w-8 md:h-8" strokeWidth={2.5} />
-                    </button>
-                    
-                    {/* Image counter */}
-                    {allImages.length > 1 && (
-                      <div className="absolute top-4 left-4 md:top-6 md:left-6 px-4 py-2 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-900 dark:text-white text-sm md:text-base font-bold shadow-lg pointer-events-none">
-                        {currentImageIndex + 1} / {allImages.length}
-                      </div>
-                    )}
-                    
-                    {/* Navigation arrows for fullscreen */}
-                    {allImages.length > 1 && (
-                      <>
-                        <button
-                          type="button"
-                          aria-label="Попереднє фото"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            goToPrevImage(allImages);
-                          }}
-                          className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 p-3 md:p-4 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-900 dark:text-white shadow-2xl z-50 hover:bg-white dark:hover:bg-gray-700 transition-colors"
-                        >
-                          <ChevronLeft className="w-8 h-8 md:w-10 md:h-10" strokeWidth={2.5} />
-                        </button>
-                        <button
-                          type="button"
-                          aria-label="Наступне фото"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            goToNextImage(allImages);
-                          }}
-                          className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 p-3 md:p-4 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-900 dark:text-white shadow-2xl z-50 hover:bg-white dark:hover:bg-gray-700 transition-colors"
-                        >
-                          <ChevronRight className="w-8 h-8 md:w-10 md:h-10" strokeWidth={2.5} />
-                        </button>
-                      </>
-                    )}
-                  </div>
-                );
-              })(),
-              document.body
-            )}
 
             {displayedListings.length === 0 && (
               <div className="card-container p-12 text-center">
