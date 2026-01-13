@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useTheme } from '@/hooks/useTheme';
-import { Sun, Moon, LogOut, Search, MapPin, Home, Building2, Filter, Lock, Bookmark, BookmarkCheck, X, Maximize2, Car, Phone, Calendar, CheckCircle, XCircle, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
+import { Sun, Moon, LogOut, Search, MapPin, Home, Building2, Filter, Lock, Bookmark, BookmarkCheck, X, Maximize2, Car, Phone, Calendar, CheckCircle, XCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
@@ -46,77 +46,9 @@ export default function Main() {
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isFullscreenImage, setIsFullscreenImage] = useState(false);
-  const [zoomLevel, setZoomLevel] = useState(1);
-  const [imagePosition, setImagePosition] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const dragStart = useRef({ x: 0, y: 0 });
-  const lastPosition = useRef({ x: 0, y: 0 });
-  
-  // Zoom handlers
-  const handleZoomIn = () => {
-    setZoomLevel(prev => Math.min(prev + 0.5, 4));
-  };
-  
-  const handleZoomOut = () => {
-    setZoomLevel(prev => {
-      const newZoom = Math.max(prev - 0.5, 1);
-      if (newZoom === 1) {
-        setImagePosition({ x: 0, y: 0 });
-      }
-      return newZoom;
-    });
-  };
-  
-  const handleResetZoom = () => {
-    setZoomLevel(1);
-    setImagePosition({ x: 0, y: 0 });
-  };
-  
-  const handleZoomWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.deltaY < 0) {
-      setZoomLevel(prev => Math.min(prev + 0.25, 4));
-    } else {
-      setZoomLevel(prev => {
-        const newZoom = Math.max(prev - 0.25, 1);
-        if (newZoom === 1) {
-          setImagePosition({ x: 0, y: 0 });
-        }
-        return newZoom;
-      });
-    }
-  };
-  
-  const handleImageMouseDown = (e: React.MouseEvent) => {
-    if (zoomLevel > 1) {
-      e.preventDefault();
-      setIsDragging(true);
-      dragStart.current = { x: e.clientX, y: e.clientY };
-      lastPosition.current = { ...imagePosition };
-    }
-  };
-  
-  const handleImageMouseMove = (e: React.MouseEvent) => {
-    if (isDragging && zoomLevel > 1) {
-      const deltaX = e.clientX - dragStart.current.x;
-      const deltaY = e.clientY - dragStart.current.y;
-      setImagePosition({
-        x: lastPosition.current.x + deltaX,
-        y: lastPosition.current.y + deltaY
-      });
-    }
-  };
-  
-  const handleImageMouseUp = () => {
-    setIsDragging(false);
-  };
   
   const closeFullscreen = useCallback(() => {
     setIsFullscreenImage(false);
-    setZoomLevel(1);
-    setImagePosition({ x: 0, y: 0 });
-    setIsDragging(false);
   }, []);
   
   // Handle Escape and Arrow keys for fullscreen navigation
@@ -130,10 +62,10 @@ export default function Main() {
       
       if (e.key === 'Escape') {
         closeFullscreen();
-      } else if (e.key === 'ArrowLeft' && zoomLevel === 1) {
+      } else if (e.key === 'ArrowLeft') {
         e.preventDefault();
         setCurrentImageIndex(prev => prev === 0 ? allImages.length - 1 : prev - 1);
-      } else if (e.key === 'ArrowRight' && zoomLevel === 1) {
+      } else if (e.key === 'ArrowRight') {
         e.preventDefault();
         setCurrentImageIndex(prev => prev === allImages.length - 1 ? 0 : prev + 1);
       }
@@ -148,7 +80,7 @@ export default function Main() {
       document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = '';
     };
-  }, [isFullscreenImage, closeFullscreen, selectedListing, zoomLevel]);
+  }, [isFullscreenImage, closeFullscreen, selectedListing]);
   
   // Touch swipe handling - improved to not block vertical scroll
   const touchStartX = useRef<number | null>(null);
@@ -971,16 +903,16 @@ export default function Main() {
                         }}
                       />
                       
-                      {/* Zoom button - positioned to avoid overlap with Dialog close */}
+                      {/* Fullscreen button - positioned to avoid overlap with Dialog close */}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           setIsFullscreenImage(true);
                         }}
                         className="absolute top-4 right-16 z-20 p-2 rounded-full bg-background/90 backdrop-blur-sm hover:bg-background transition-colors"
-                        aria-label="Збільшити зображення"
+                        aria-label="На весь екран"
                       >
-                        <ZoomIn className="w-5 h-5 text-foreground" />
+                        <Maximize2 className="w-5 h-5 text-foreground" />
                       </button>
                       
                       {/* Navigation arrows - visible on all devices when multiple images */}
@@ -1218,27 +1150,16 @@ export default function Main() {
                   <div 
                     className="fixed inset-0 z-[9999] bg-black flex items-center justify-center touch-none overflow-hidden"
                     onClick={(e) => {
-                      // Only close if clicking the backdrop, not any child element
-                      if (e.target === e.currentTarget && zoomLevel === 1) {
+                      if (e.target === e.currentTarget) {
                         closeFullscreen();
                       }
                     }}
-                    onWheel={handleZoomWheel}
-                    onMouseMove={handleImageMouseMove}
-                    onMouseUp={handleImageMouseUp}
-                    onMouseLeave={handleImageMouseUp}
                   >
                     <img
                       src={allImages[currentImageIndex]}
                       alt={`${selectedListing.title} - фото ${currentImageIndex + 1}`}
-                      className={`max-w-[95vw] max-h-[95vh] object-contain select-none transition-transform duration-200 ${
-                        zoomLevel > 1 ? 'cursor-grab' : ''
-                      } ${isDragging ? 'cursor-grabbing' : ''}`}
-                      style={{
-                        transform: `scale(${zoomLevel}) translate(${imagePosition.x / zoomLevel}px, ${imagePosition.y / zoomLevel}px)`,
-                      }}
+                      className="max-w-[95vw] max-h-[95vh] object-contain select-none"
                       onClick={(e) => e.stopPropagation()}
-                      onMouseDown={handleImageMouseDown}
                       draggable={false}
                     />
                     
@@ -1263,59 +1184,8 @@ export default function Main() {
                       </div>
                     )}
                     
-                    {/* Zoom controls - desktop only */}
-                    <div className="hidden md:flex absolute bottom-6 left-1/2 -translate-x-1/2 items-center gap-2 px-4 py-2 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-2xl z-50">
-                      <button
-                        type="button"
-                        aria-label="Зменшити"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleZoomOut();
-                        }}
-                        disabled={zoomLevel <= 1}
-                        className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                      >
-                        <ZoomOut className="w-5 h-5 text-gray-900 dark:text-white" />
-                      </button>
-                      <span className="text-sm font-medium text-gray-900 dark:text-white min-w-[3rem] text-center">
-                        {Math.round(zoomLevel * 100)}%
-                      </span>
-                      <button
-                        type="button"
-                        aria-label="Збільшити"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleZoomIn();
-                        }}
-                        disabled={zoomLevel >= 4}
-                        className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                      >
-                        <ZoomIn className="w-5 h-5 text-gray-900 dark:text-white" />
-                      </button>
-                      {zoomLevel > 1 && (
-                        <button
-                          type="button"
-                          aria-label="Скинути масштаб"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleResetZoom();
-                          }}
-                          className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors ml-2 border-l border-gray-300 dark:border-gray-600 pl-4"
-                        >
-                          <RotateCcw className="w-5 h-5 text-gray-900 dark:text-white" />
-                        </button>
-                      )}
-                    </div>
-                    
-                    {/* Zoom hint */}
-                    {zoomLevel === 1 && (
-                      <div className="hidden md:block absolute bottom-20 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm text-gray-900 dark:text-white text-sm pointer-events-none">
-                        Використовуйте коліщатко миші або кнопки для масштабування
-                      </div>
-                    )}
-                    
                     {/* Navigation arrows for fullscreen */}
-                    {allImages.length > 1 && zoomLevel === 1 && (
+                    {allImages.length > 1 && (
                       <>
                         <button
                           type="button"
