@@ -1,15 +1,18 @@
-import { useState, useEffect, useRef, TouchEvent } from 'react';
+import { useState, useEffect, useRef, TouchEvent, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { useTheme } from '@/hooks/useTheme';
-import { Sun, Moon, LogOut, Search, MapPin, Home, Building2, Filter, Lock, Bookmark, BookmarkCheck, X, Maximize2, Car, Phone, Calendar, CheckCircle, XCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Sun, Moon, LogOut, Search, MapPin, Home, Building2, Filter, Lock, Bookmark, BookmarkCheck, X, Maximize2, Car, Phone, Calendar, CheckCircle, XCircle, ChevronLeft, ChevronRight, Check, ChevronsUpDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 interface Listing {
   id: string;
@@ -129,6 +132,8 @@ export default function Main() {
   
   // Filters
   const [city, setCity] = useState('');
+  const [citySearch, setCitySearch] = useState('');
+  const [cityOpen, setCityOpen] = useState(false);
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const [availableCities, setAvailableCities] = useState<string[]>([]);
@@ -137,6 +142,14 @@ export default function Main() {
   const [minArea, setMinArea] = useState('');
   const [maxArea, setMaxArea] = useState('');
   const [hasParking, setHasParking] = useState(false);
+
+  // Filter cities based on search input
+  const filteredCities = useMemo(() => {
+    if (!citySearch) return availableCities;
+    return availableCities.filter(c => 
+      c.toLowerCase().includes(citySearch.toLowerCase())
+    );
+  }, [availableCities, citySearch]);
 
   // Fetch listings from database
   const fetchListings = async () => {
@@ -483,21 +496,69 @@ export default function Main() {
                     <TooltipTrigger asChild>
                       <div className={!canUseFilters ? 'opacity-60 cursor-not-allowed' : ''}>
                         <label className="block text-sm font-medium text-foreground mb-2">Місто</label>
-                        <Select 
-                          value={city} 
-                          onValueChange={(value) => handleFilterChange(setCity, value)}
-                          disabled={!canUseFilters}
-                        >
-                          <SelectTrigger className="rounded-xl">
-                            <SelectValue placeholder="Оберіть місто" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">Всі міста</SelectItem>
-                            {availableCities.map((cityName) => (
-                              <SelectItem key={cityName} value={cityName}>{cityName}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <Popover open={cityOpen} onOpenChange={setCityOpen}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={cityOpen}
+                              className="w-full justify-between rounded-xl font-normal"
+                              disabled={!canUseFilters}
+                            >
+                              {city === 'all' ? 'Всі міста' : city || 'Оберіть місто'}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                            <Command>
+                              <CommandInput 
+                                placeholder="Пошук міста..." 
+                                value={citySearch}
+                                onValueChange={setCitySearch}
+                              />
+                              <CommandList>
+                                <CommandEmpty>Місто не знайдено</CommandEmpty>
+                                <CommandGroup>
+                                  <CommandItem
+                                    value="all"
+                                    onSelect={() => {
+                                      handleFilterChange(setCity, 'all');
+                                      setCityOpen(false);
+                                      setCitySearch('');
+                                    }}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-4 w-4",
+                                        city === 'all' ? "opacity-100" : "opacity-0"
+                                      )}
+                                    />
+                                    Всі міста
+                                  </CommandItem>
+                                  {filteredCities.map((cityName) => (
+                                    <CommandItem
+                                      key={cityName}
+                                      value={cityName}
+                                      onSelect={() => {
+                                        handleFilterChange(setCity, cityName);
+                                        setCityOpen(false);
+                                        setCitySearch('');
+                                      }}
+                                    >
+                                      <Check
+                                        className={cn(
+                                          "mr-2 h-4 w-4",
+                                          city === cityName ? "opacity-100" : "opacity-0"
+                                        )}
+                                      />
+                                      {cityName}
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
                       </div>
                     </TooltipTrigger>
                     {!canUseFilters && (
