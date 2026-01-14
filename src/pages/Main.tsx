@@ -1074,13 +1074,15 @@ export default function Main() {
                           >
                             {savedIds.has(selectedListing.id) ? (
                               <>
-                                <BookmarkCheck className="w-4 h-4 mr-2" />
-                                Видалити зі збережених
+                                <BookmarkCheck className="w-4 h-4 sm:mr-2" />
+                                <span className="hidden sm:inline">Видалити зі збережених</span>
+                                <span className="sm:hidden">Видалити</span>
                               </>
                             ) : (
                               <>
-                                <Bookmark className="w-4 h-4 mr-2" />
-                                Зберегти оголошення
+                                <Bookmark className="w-4 h-4 sm:mr-2" />
+                                <span className="hidden sm:inline">Зберегти оголошення</span>
+                                <span className="sm:hidden">Зберегти</span>
                               </>
                             )}
                           </Button>
