@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { encode } from "https://deno.land/std@0.168.0/encoding/hex.ts";
+import CryptoJS from "https://esm.sh/crypto-js@4.2.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,21 +9,9 @@ const corsHeaders = {
 const WAYFORPAY_LOGIN = Deno.env.get("WAYFORPAY_LOGIN")!;
 const WAYFORPAY_KEY = Deno.env.get("WAYFORPAY_KEY")!;
 
-async function generateHmacMd5(data: string, key: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const keyData = encoder.encode(key);
-  const messageData = encoder.encode(data);
-
-  const cryptoKey = await crypto.subtle.importKey(
-    "raw",
-    keyData,
-    { name: "HMAC", hash: "MD5" },
-    false,
-    ["sign"]
-  );
-
-  const signature = await crypto.subtle.sign("HMAC", cryptoKey, messageData);
-  return new TextDecoder().decode(encode(new Uint8Array(signature)));
+function generateHmacMd5(data: string, key: string): string {
+  const hash = CryptoJS.HmacMD5(data, key);
+  return hash.toString(CryptoJS.enc.Hex);
 }
 
 serve(async (req) => {
@@ -34,10 +22,10 @@ serve(async (req) => {
   try {
     const { planId, userEmail, userId } = await req.json();
 
-    // Plan configuration
+    // Plan configuration - updated prices
     const plans: Record<string, { name: string; price: number; days: number }> = {
-      "10days": { name: "GoToHome Smart - 10 днів", price: 99, days: 10 },
-      "30days": { name: "GoToHome Pro - 30 днів", price: 199, days: 30 },
+      "10days": { name: "GoToHome Smart - 10 днів", price: 199, days: 10 },
+      "30days": { name: "GoToHome Pro - 30 днів", price: 299, days: 30 },
     };
 
     const plan = plans[planId];
@@ -68,7 +56,7 @@ serve(async (req) => {
       productPrice.toString(),
     ].join(";");
 
-    const signature = await generateHmacMd5(signatureString, WAYFORPAY_KEY);
+    const signature = generateHmacMd5(signatureString, WAYFORPAY_KEY);
 
     // Payment form data
     const paymentData = {

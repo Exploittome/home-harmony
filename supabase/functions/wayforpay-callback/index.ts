@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { encode } from "https://deno.land/std@0.168.0/encoding/hex.ts";
+import CryptoJS from "https://esm.sh/crypto-js@4.2.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,21 +12,9 @@ const WAYFORPAY_KEY = Deno.env.get("WAYFORPAY_KEY")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-async function generateHmacMd5(data: string, key: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const keyData = encoder.encode(key);
-  const messageData = encoder.encode(data);
-
-  const cryptoKey = await crypto.subtle.importKey(
-    "raw",
-    keyData,
-    { name: "HMAC", hash: "MD5" },
-    false,
-    ["sign"]
-  );
-
-  const signature = await crypto.subtle.sign("HMAC", cryptoKey, messageData);
-  return new TextDecoder().decode(encode(new Uint8Array(signature)));
+function generateHmacMd5(data: string, key: string): string {
+  const hash = CryptoJS.HmacMD5(data, key);
+  return hash.toString(CryptoJS.enc.Hex);
 }
 
 serve(async (req) => {
@@ -111,7 +99,7 @@ serve(async (req) => {
     // Generate response signature for WayForPay
     const time = Math.floor(Date.now() / 1000);
     const responseSignatureString = [orderReference, "accept", time.toString()].join(";");
-    const responseSignature = await generateHmacMd5(responseSignatureString, WAYFORPAY_KEY);
+    const responseSignature = generateHmacMd5(responseSignatureString, WAYFORPAY_KEY);
 
     // Return acknowledgment to WayForPay
     const response = {
