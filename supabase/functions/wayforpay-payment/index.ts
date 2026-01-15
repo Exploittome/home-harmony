@@ -101,19 +101,29 @@ serve(async (req) => {
     };
 
     // Add recurring payment parameters for Pro plan (monthly)
+    // WayForPay requires specific field names and string values for recurring to work
     if (plan.regularMode !== "none") {
-      paymentData.regularMode = plan.regularMode;
-      paymentData.regularAmount = plan.price;
-      paymentData.regularOn = 1; // Enable recurring checkbox by default
+      paymentData.regularMode = plan.regularMode; // "monthly"
+      paymentData.regularAmount = String(plan.price); // Must be string
+      paymentData.regularOn = "1"; // Must be string "1" to enable recurring
       paymentData.regularBehavior = "preset"; // User cannot edit recurring parameters
+      paymentData.regularCount = "12"; // Number of recurring payments (12 months max)
       
       // Calculate next payment date (30 days from now for monthly)
+      // Format: DD.MM.YYYY as required by WayForPay
       const nextDate = new Date();
       nextDate.setDate(nextDate.getDate() + plan.days);
       const day = String(nextDate.getDate()).padStart(2, '0');
       const month = String(nextDate.getMonth() + 1).padStart(2, '0');
       const year = nextDate.getFullYear();
       paymentData.dateNext = `${day}.${month}.${year}`;
+      
+      console.log("Recurring payment enabled:", {
+        regularMode: paymentData.regularMode,
+        regularAmount: paymentData.regularAmount,
+        regularOn: paymentData.regularOn,
+        dateNext: paymentData.dateNext,
+      });
     }
 
     return new Response(
