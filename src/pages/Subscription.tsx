@@ -38,7 +38,7 @@ const plans = [
     id: '30days',
     name: 'Pro',
     nameColor: 'text-yellow-600 dark:text-yellow-400',
-    price: 199,
+    price: 299,
     period: 'за 30 днів',
     features: [
       'Повний доступ до сайту',
