@@ -109,6 +109,7 @@ export default function Subscription() {
           planId: selectedPlan,
           userEmail: user.email,
           userId: user.id,
+          returnDomain: window.location.origin,
         },
       });
 

@@ -20,7 +20,10 @@ serve(async (req) => {
   }
 
   try {
-    const { planId, userEmail, userId } = await req.json();
+    const { planId, userEmail, userId, returnDomain } = await req.json();
+    
+    // Use provided domain or fallback to production
+    const domain = returnDomain || "https://gotohome.com.ua";
 
     // Plan configuration with recurring settings
     const plans: Record<string, { name: string; price: number; days: number; regularMode: string }> = {
@@ -71,7 +74,7 @@ serve(async (req) => {
       productPrice: [productPrice],
       productCount: [productCount],
       clientEmail: userEmail,
-      returnUrl: "https://gotohome.com.ua/subscription?status=success",
+      returnUrl: `${domain}/subscription?status=success`,
       serviceUrl: "https://qselmijdcggthggjvdej.supabase.co/functions/v1/wayforpay-callback",
       language: "UA",
     };
