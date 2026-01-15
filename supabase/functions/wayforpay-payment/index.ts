@@ -20,7 +20,31 @@ serve(async (req) => {
   }
 
   try {
-    const { planId, userEmail, userId } = await req.json();
+    const { planId, userEmail, userId, returnDomain } = await req.json();
+
+    // Use caller origin when possible (keeps Supabase auth session on the same domain)
+    // and fallback to production www domain.
+    const domain = (() => {
+      const fallback = "https://www.gotohome.com.ua";
+      if (!returnDomain || typeof returnDomain !== "string") return fallback;
+
+      try {
+        const url = new URL(returnDomain);
+        const host = url.hostname.toLowerCase();
+
+        const allowed =
+          host === "www.gotohome.com.ua" ||
+          host === "gotohome.com.ua" ||
+          host.endsWith(".lovable.app") ||
+          host === "localhost" ||
+          host.endsWith(".localhost");
+
+        if (!allowed) return fallback;
+        return `${url.protocol}//${url.host}`;
+      } catch {
+        return fallback;
+      }
+    })();
 
     // Plan configuration with recurring settings
     const plans: Record<string, { name: string; price: number; days: number; regularMode: string }> = {
@@ -71,7 +95,7 @@ serve(async (req) => {
       productPrice: [productPrice],
       productCount: [productCount],
       clientEmail: userEmail,
-      returnUrl: "https://www.gotohome.com.ua/main",
+      returnUrl: `${domain}/main`,
       serviceUrl: "https://qselmijdcggthggjvdej.supabase.co/functions/v1/wayforpay-callback",
       language: "UA",
     };
