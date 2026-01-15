@@ -24,7 +24,7 @@ const plans = [
     id: '10days',
     name: 'Smart',
     nameColor: 'text-red-600 dark:text-red-400',
-    price: 99,
+    price: 199,
     period: 'за 10 днів',
     popular: true,
     features: [
