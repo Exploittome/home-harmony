@@ -95,7 +95,7 @@ serve(async (req) => {
       productPrice: [productPrice],
       productCount: [productCount],
       clientEmail: userEmail,
-      returnUrl: `${domain}/main`,
+      returnUrl: domain,
       serviceUrl: "https://qselmijdcggthggjvdej.supabase.co/functions/v1/wayforpay-callback",
       language: "UA",
     };
