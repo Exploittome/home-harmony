@@ -40,11 +40,13 @@ const plans = [
     nameColor: 'text-yellow-600 dark:text-yellow-400',
     price: 299,
     period: 'за 30 днів',
+    isRecurring: true,
     features: [
       'Повний доступ до сайту',
       'Сповіщення на телеграм про нові оголошення',
       'Збереження обраних',
       'Найкраща ціна за день',
+      'Автоматичне поновлення щомісяця',
     ],
     limitations: [],
   },
@@ -313,6 +315,15 @@ export default function Subscription() {
                 </Button>
               </div>
             </div>
+
+            {(selectedPlanData as typeof plans[0] & { isRecurring?: boolean })?.isRecurring && (
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-4">
+                <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                  <strong>Автоматичне поновлення:</strong> Підписка автоматично поновлюється щомісяця. 
+                  Ви можете скасувати автоматичне списання в будь-який момент через ваш банк або WayForPay.
+                </p>
+              </div>
+            )}
 
             <p className="text-center text-sm text-muted-foreground">
               Натискаючи "Оплатити", ви погоджуєтесь з{' '}
