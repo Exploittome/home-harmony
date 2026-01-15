@@ -101,13 +101,18 @@ serve(async (req) => {
     };
 
     // Add recurring payment parameters for Pro plan (monthly)
-    // WayForPay requires specific field names and string values for recurring to work
+    // According to WayForPay docs: https://wiki.wayforpay.com/en/view/852102
+    // - regularOn: value = 1 enables the checkbox "make payment regular"
+    // - regularMode: frequency (monthly, daily, weekly, etc.)
+    // - regularAmount: amount of regular payment
+    // - dateNext: date of first write-off in format DD.MM.YYYY
+    // - regularCount: number of payments
     if (plan.regularMode !== "none") {
       paymentData.regularMode = plan.regularMode; // "monthly"
-      paymentData.regularAmount = String(plan.price); // Must be string
-      paymentData.regularOn = "1"; // Must be string "1" to enable recurring
+      paymentData.regularAmount = plan.price; // Amount as number
+      paymentData.regularOn = 1; // Number 1 to enable recurring (per WayForPay docs)
       paymentData.regularBehavior = "preset"; // User cannot edit recurring parameters
-      paymentData.regularCount = "12"; // Number of recurring payments (12 months max)
+      paymentData.regularCount = 12; // Number of recurring payments
       
       // Calculate next payment date (30 days from now for monthly)
       // Format: DD.MM.YYYY as required by WayForPay
@@ -118,12 +123,14 @@ serve(async (req) => {
       const year = nextDate.getFullYear();
       paymentData.dateNext = `${day}.${month}.${year}`;
       
-      console.log("Recurring payment enabled:", {
+      console.log("Recurring payment params:", JSON.stringify({
         regularMode: paymentData.regularMode,
         regularAmount: paymentData.regularAmount,
         regularOn: paymentData.regularOn,
+        regularBehavior: paymentData.regularBehavior,
+        regularCount: paymentData.regularCount,
         dateNext: paymentData.dateNext,
-      });
+      }));
     }
 
     return new Response(
