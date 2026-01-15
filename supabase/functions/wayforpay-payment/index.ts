@@ -101,18 +101,19 @@ serve(async (req) => {
     };
 
     // Add recurring payment parameters for Pro plan (monthly)
-    // According to WayForPay docs: https://wiki.wayforpay.com/en/view/852102
+    // According to WayForPay docs: https://wiki.wayforpay.com/view/852102
+    // IMPORTANT: "Регулярні платежі" service must be enabled in WayForPay merchant dashboard!
+    // Parameters:
     // - regularOn: value = 1 enables the checkbox "make payment regular"
     // - regularMode: frequency (monthly, daily, weekly, etc.)
-    // - regularAmount: amount of regular payment
-    // - dateNext: date of first write-off in format DD.MM.YYYY
-    // - regularCount: number of payments
+    // - regularAmount: amount of regular payment (if not set, uses "amount")
+    // - dateNext: date of first recurring write-off in format DD.MM.YYYY
+    // - regularCount: number of recurring payments
     if (plan.regularMode !== "none") {
       paymentData.regularMode = plan.regularMode; // "monthly"
-      paymentData.regularAmount = plan.price; // Amount as number
-      paymentData.regularOn = 1; // Number 1 to enable recurring (per WayForPay docs)
-      paymentData.regularBehavior = "preset"; // User cannot edit recurring parameters
-      paymentData.regularCount = 12; // Number of recurring payments
+      paymentData.regularAmount = plan.price; // Amount for recurring payment
+      paymentData.regularOn = 1; // Enable recurring checkbox (value = 1)
+      paymentData.regularCount = 12; // Number of recurring payments (12 months)
       
       // Calculate next payment date (30 days from now for monthly)
       // Format: DD.MM.YYYY as required by WayForPay
@@ -123,11 +124,10 @@ serve(async (req) => {
       const year = nextDate.getFullYear();
       paymentData.dateNext = `${day}.${month}.${year}`;
       
-      console.log("Recurring payment params:", JSON.stringify({
+      console.log("PRO plan recurring payment - params sent to WayForPay:", JSON.stringify({
         regularMode: paymentData.regularMode,
         regularAmount: paymentData.regularAmount,
         regularOn: paymentData.regularOn,
-        regularBehavior: paymentData.regularBehavior,
         regularCount: paymentData.regularCount,
         dateNext: paymentData.dateNext,
       }));
