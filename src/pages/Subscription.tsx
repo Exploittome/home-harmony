@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/useTheme';
 import { useToast } from '@/hooks/use-toast';
@@ -54,8 +54,27 @@ export default function Subscription() {
   const { theme, toggleTheme } = useTheme();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Check for payment status from URL
+  useEffect(() => {
+    const status = searchParams.get('status');
+    if (status === 'success') {
+      toast({
+        title: 'Оплата успішна!',
+        description: 'Ваш план активовано. Дякуємо за покупку!',
+      });
+      navigate('/main', { replace: true });
+    } else if (status === 'error') {
+      toast({
+        title: 'Помилка оплати',
+        description: 'Не вдалося обробити оплату. Спробуйте ще раз.',
+        variant: 'destructive',
+      });
+    }
+  }, [searchParams, toast, navigate]);
 
   const handleSelectPlan = (planId: string) => {
     if (planId === 'basic') {
@@ -69,44 +88,84 @@ export default function Subscription() {
     setLoading(true);
 
     try {
-      // Get current user email
+      // Get current user
       const { data: { user } } = await supabase.auth.getUser();
-      const userEmail = user?.email || 'Невідомий';
+      
+      if (!user) {
+        toast({
+          title: 'Помилка',
+          description: 'Будь ласка, увійдіть в систему для оплати.',
+          variant: 'destructive',
+        });
+        navigate('/auth');
+        return;
+      }
 
-      // Simulate payment process - will be replaced with Stripe
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      // Call edge function to get payment data
+      const { data, error } = await supabase.functions.invoke('wayforpay-payment', {
+        body: {
+          planId: selectedPlan,
+          userEmail: user.email,
+          userId: user.id,
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
 
       // Send Telegram notification for PRO subscriptions
       if (selectedPlanData) {
         try {
           await supabase.functions.invoke('send-telegram-pro', {
             body: {
-              email: userEmail,
+              email: user.email,
               planName: selectedPlanData.name,
               price: selectedPlanData.price,
               period: selectedPlanData.period,
             },
           });
-          console.log('PRO subscription notification sent');
         } catch (telegramError) {
           console.error('Failed to send Telegram notification:', telegramError);
         }
       }
 
-      toast({
-        title: 'Оплата успішна!',
-        description: 'Ваш план активовано.',
+      // Create and submit WayForPay form
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = 'https://secure.wayforpay.com/pay';
+      form.acceptCharset = 'UTF-8';
+
+      const paymentData = data.paymentData;
+      
+      // Add form fields
+      Object.entries(paymentData).forEach(([key, value]) => {
+        if (Array.isArray(value)) {
+          value.forEach((item, index) => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = `${key}[]`;
+            input.value = String(item);
+            form.appendChild(input);
+          });
+        } else {
+          const input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = key;
+          input.value = String(value);
+          form.appendChild(input);
+        }
       });
 
-      navigate('/main');
+      document.body.appendChild(form);
+      form.submit();
     } catch (error) {
       console.error('Payment error:', error);
       toast({
         title: 'Помилка',
-        description: 'Не вдалося обробити оплату.',
+        description: 'Не вдалося ініціювати оплату. Спробуйте ще раз.',
         variant: 'destructive',
       });
-    } finally {
       setLoading(false);
     }
   };
@@ -250,13 +309,13 @@ export default function Subscription() {
                   onClick={handleProceedToPayment}
                   disabled={loading}
                 >
-                  {loading ? 'Обробка оплати...' : 'Перейти до оплати'}
+                  {loading ? 'Переходимо до оплати...' : 'Оплатити через WayForPay'}
                 </Button>
               </div>
             </div>
 
             <p className="text-center text-sm text-muted-foreground">
-              Натискаючи "Перейти до оплати", ви погоджуєтесь з{' '}
+              Натискаючи "Оплатити", ви погоджуєтесь з{' '}
               <Link to="/terms" className="text-accent hover:underline">
                 Умовами використання
               </Link>
