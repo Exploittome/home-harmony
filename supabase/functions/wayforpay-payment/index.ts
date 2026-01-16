@@ -95,7 +95,9 @@ serve(async (req) => {
       productPrice: [productPrice],
       productCount: [productCount],
       clientEmail: userEmail,
-      returnUrl: `${domain}/main`,
+      // WayForPay may redirect with POST; use an Edge Function to convert it to a safe GET navigation.
+      returnUrl: `https://qselmijdcggthggjvdej.supabase.co/functions/v1/wayforpay-return?rd=${encodeURIComponent(domain)}`,
+
       serviceUrl: "https://qselmijdcggthggjvdej.supabase.co/functions/v1/wayforpay-callback",
       language: "UA",
     };

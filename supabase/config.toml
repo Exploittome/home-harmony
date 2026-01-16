@@ -14,3 +14,7 @@ verify_jwt = false
 
 [functions.wayforpay-callback]
 verify_jwt = false
+
+[functions.wayforpay-return]
+verify_jwt = false
+
