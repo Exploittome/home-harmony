@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { ActiveUsersCounter } from '@/components/ActiveUsersCounter';
 
 interface Listing {
   id: string;
@@ -376,6 +377,7 @@ export default function Main() {
           </Link>
 
           <div className="flex items-center gap-3">
+            <ActiveUsersCounter userEmail={user?.email || null} />
             <Button variant="ghost" size="icon" onClick={toggleTheme} className="rounded-full">
               {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </Button>

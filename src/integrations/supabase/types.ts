@@ -145,6 +145,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_sessions: {
+        Row: {
+          created_at: string
+          id: string
+          last_seen: string
+          session_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_seen?: string
+          session_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_seen?: string
+          session_id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_subscriptions: {
         Row: {
           created_at: string
