@@ -13,7 +13,7 @@ export const ActiveUsersCounter = ({ userEmail }: ActiveUsersCounterProps) => {
   }
 
   return (
-    <div className="flex items-center gap-2 sm:gap-4 px-2 sm:px-3 py-1.5 sm:py-2 bg-primary/10 rounded-lg border border-primary/20">
+    <div className="flex items-center gap-2 sm:gap-4 px-2 sm:px-3 py-1.5 sm:py-2 bg-primary/10 rounded-lg border border-primary/20 ml-4 sm:ml-6">
       <div className="flex items-center gap-1 sm:gap-2">
         <div className="relative">
           <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-500" />
