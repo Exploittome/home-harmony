@@ -371,13 +371,15 @@ export default function Main() {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-3">
-            <img src="/images/logo.png" alt="GOTOHOME" className="w-10 h-10 object-contain" />
-            <span className="font-display text-xl font-semibold text-foreground">GOTOHOME</span>
-          </Link>
+          <div className="flex items-center gap-4 sm:gap-6">
+            <Link to="/" className="flex items-center gap-3">
+              <img src="/images/logo.png" alt="GOTOHOME" className="w-10 h-10 object-contain" />
+              <span className="font-display text-xl font-semibold text-foreground">GOTOHOME</span>
+            </Link>
+            <ActiveUsersCounter userEmail={user?.email || null} />
+          </div>
 
           <div className="flex items-center gap-3">
-            <ActiveUsersCounter userEmail={user?.email || null} />
             <Button variant="ghost" size="icon" onClick={toggleTheme} className="rounded-full">
               {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </Button>
