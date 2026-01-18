@@ -75,11 +75,11 @@ export const useActiveUsers = (userEmail: string | null) => {
         .select('*', { count: 'exact', head: true })
         .gte('last_seen', fiveMinutesAgo.toISOString());
 
-      // Count today's unique visitors
+      // Count today's unique visitors (sessions active today)
       const { count: todayCount } = await supabase
         .from('user_sessions')
         .select('*', { count: 'exact', head: true })
-        .gte('created_at', todayStart.toISOString());
+        .gte('last_seen', todayStart.toISOString());
 
       setStats({
         onlineNow: onlineCount || 0,
