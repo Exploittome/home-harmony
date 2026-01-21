@@ -152,18 +152,35 @@ export default function Main() {
     );
   }, [availableCities, citySearch]);
 
-  // Fetch listings from database
+  // Fetch listings from database (using range to bypass 1000 row limit)
   const fetchListings = async () => {
-    const { data, error } = await supabase
-      .from('listings')
-      .select('id, title, price, city, rooms, area, has_parking, phone, image_url, images, description, created_at')
-      .order('created_at', { ascending: false });
+    let allListings: Listing[] = [];
+    let from = 0;
+    const batchSize = 1000;
+    let hasMore = true;
 
-    if (error) {
-      console.error('Error fetching listings:', error);
-    } else {
-      setListings(data as Listing[]);
+    while (hasMore) {
+      const { data, error } = await supabase
+        .from('listings')
+        .select('id, title, price, city, rooms, area, has_parking, phone, image_url, images, description, created_at')
+        .order('created_at', { ascending: false })
+        .range(from, from + batchSize - 1);
+
+      if (error) {
+        console.error('Error fetching listings:', error);
+        break;
+      }
+
+      if (data && data.length > 0) {
+        allListings = [...allListings, ...data as Listing[]];
+        from += batchSize;
+        hasMore = data.length === batchSize;
+      } else {
+        hasMore = false;
+      }
     }
+
+    setListings(allListings);
     setListingsLoading(false);
   };
 
@@ -201,16 +218,35 @@ export default function Main() {
     setPlanLoading(false);
   };
 
-  // Fetch available cities from database
+  // Fetch available cities from database (using range to bypass 1000 row limit)
   const fetchCities = async () => {
-    const { data, error } = await supabase
-      .from('listings')
-      .select('city');
+    let allCities: string[] = [];
+    let from = 0;
+    const batchSize = 1000;
+    let hasMore = true;
 
-    if (!error && data) {
-      const uniqueCities = [...new Set(data.map(l => l.city))].sort();
-      setAvailableCities(uniqueCities);
+    while (hasMore) {
+      const { data, error } = await supabase
+        .from('listings')
+        .select('city')
+        .range(from, from + batchSize - 1);
+
+      if (error) {
+        console.error('Error fetching cities:', error);
+        break;
+      }
+
+      if (data && data.length > 0) {
+        allCities = [...allCities, ...data.map(l => l.city)];
+        from += batchSize;
+        hasMore = data.length === batchSize;
+      } else {
+        hasMore = false;
+      }
     }
+
+    const uniqueCities = [...new Set(allCities)].sort();
+    setAvailableCities(uniqueCities);
   };
 
   useEffect(() => {
