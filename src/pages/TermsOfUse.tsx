@@ -75,12 +75,7 @@ export default function TermsOfUse() {
               📧 gotohomesup@gmail.com<br />
               📞 +380 98 957 08 30
             </p>
-            <p>
-            <strong>Банківські реквізити:</strong><br />
-              IBAN: UA473220010000026007330026279<br />
-              Банк: АТ «УНІВЕРСАЛ БАНК»<br />
-              МФО: 322001
-            </p>
+            
           </section>
         </div>
       </div>
