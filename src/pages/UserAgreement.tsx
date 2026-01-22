@@ -1,14 +1,9 @@
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-
 export default function UserAgreement() {
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto px-4 py-12">
-        <Link 
-          to="/" 
-          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground smooth-transition mb-8"
-        >
+        <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground smooth-transition mb-8">
           <ArrowLeft className="w-4 h-4" />
           Повернутися на головну
         </Link>
@@ -115,7 +110,7 @@ export default function UserAgreement() {
           </section>
 
           <section className="space-y-4">
-            <h2 className="text-xl font-semibold text-foreground">8. Реквізити та контакти Адміністрації</h2>
+            <h2 className="text-xl font-semibold text-foreground">Контакти Адміністрації</h2>
             <p>
               <strong>ФОП Фільварський Ігор Ярославович</strong><br />
               ІПН: 3351602439<br />
@@ -134,6 +129,5 @@ export default function UserAgreement() {
           </section>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 }
