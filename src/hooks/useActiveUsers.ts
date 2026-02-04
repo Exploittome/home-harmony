@@ -7,16 +7,6 @@ interface ActiveUsersStats {
   isLoading: boolean;
 }
 
-// Generate or get persistent session ID
-const getSessionId = (): string => {
-  let sessionId = localStorage.getItem('app_session_id');
-  if (!sessionId) {
-    sessionId = crypto.randomUUID();
-    localStorage.setItem('app_session_id', sessionId);
-  }
-  return sessionId;
-};
-
 export const useActiveUsers = (userEmail: string | null) => {
   const [stats, setStats] = useState<ActiveUsersStats>({
     onlineNow: 0,
@@ -25,37 +15,6 @@ export const useActiveUsers = (userEmail: string | null) => {
   });
 
   const isAdmin = userEmail === 'exploittome@gmail.com';
-
-  // Update session heartbeat
-  const updateHeartbeat = useCallback(async () => {
-    const sessionId = getSessionId();
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    try {
-      // First try to update existing session
-      const { data: updated, error: updateError } = await supabase
-        .from('user_sessions')
-        .update({ 
-          last_seen: new Date().toISOString(),
-          user_id: user?.id || null,
-        })
-        .eq('session_id', sessionId)
-        .select('id');
-
-      // If no row was updated, insert a new session
-      if (!updated || updated.length === 0) {
-        await supabase
-          .from('user_sessions')
-          .insert({
-            session_id: sessionId,
-            user_id: user?.id || null,
-            last_seen: new Date().toISOString(),
-          });
-      }
-    } catch (error) {
-      console.error('Heartbeat error:', error);
-    }
-  }, []);
 
   // Fetch stats (only for admin)
   const fetchStats = useCallback(async () => {
@@ -93,24 +52,15 @@ export const useActiveUsers = (userEmail: string | null) => {
   }, [isAdmin]);
 
   useEffect(() => {
-    // Always update heartbeat for all users
-    updateHeartbeat();
-
-    // Set up heartbeat interval (every 30 seconds)
-    const heartbeatInterval = setInterval(updateHeartbeat, 30000);
-
     // Fetch stats only for admin
     if (isAdmin) {
       fetchStats();
       const statsInterval = setInterval(fetchStats, 60000); // Update stats every minute
-      return () => {
-        clearInterval(heartbeatInterval);
-        clearInterval(statsInterval);
-      };
+      return () => clearInterval(statsInterval);
+    } else {
+      setStats(prev => ({ ...prev, isLoading: false }));
     }
-
-    return () => clearInterval(heartbeatInterval);
-  }, [isAdmin, updateHeartbeat, fetchStats]);
+  }, [isAdmin, fetchStats]);
 
   return { stats, isAdmin };
 };

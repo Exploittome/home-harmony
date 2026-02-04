@@ -13,8 +13,15 @@ import TermsOfUse from "./pages/TermsOfUse";
 import UserAgreement from "./pages/UserAgreement";
 import Saved from "./pages/Saved";
 import NotFound from "./pages/NotFound";
+import { useSessionHeartbeat } from "./hooks/useSessionHeartbeat";
 
 const queryClient = new QueryClient();
+
+// Global session tracking component
+const SessionTracker = () => {
+  useSessionHeartbeat();
+  return null;
+};
 
 const RecoveryRedirect = () => {
   const navigate = useNavigate();
@@ -63,6 +70,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <SessionTracker />
         <RecoveryRedirect />
         <Routes>
           <Route path="/" element={<Index />} />
