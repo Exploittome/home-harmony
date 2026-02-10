@@ -143,6 +143,10 @@ export default function Main() {
   const [minArea, setMinArea] = useState('');
   const [maxArea, setMaxArea] = useState('');
   const [hasParking, setHasParking] = useState(false);
+  
+  // Pagination
+  const ITEMS_PER_PAGE = 24;
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Filter cities based on search input
   const filteredCities = useMemo(() => {
@@ -338,7 +342,19 @@ export default function Main() {
   });
 
   // Limit listings for basic plan
-  const displayedListings = userPlan === 'basic' ? filteredListings.slice(0, 10) : filteredListings;
+  const planFilteredListings = userPlan === 'basic' ? filteredListings.slice(0, 10) : filteredListings;
+  
+  // Pagination
+  const totalPages = Math.ceil(planFilteredListings.length / ITEMS_PER_PAGE);
+  const displayedListings = planFilteredListings.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+  
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [city, minPrice, maxPrice, rooms, propertyType, minArea, maxArea, hasParking]);
 
   const getPlanLabel = (plan: SubscriptionPlan) => {
     switch (plan) {
@@ -817,7 +833,7 @@ export default function Main() {
                 Оголошення
               </h1>
               <p className="text-muted-foreground">
-                Знайдено: {displayedListings.length} {userPlan === 'basic' && filteredListings.length > 10 && `з ${filteredListings.length}`}
+                Знайдено: {planFilteredListings.length} {userPlan === 'basic' && filteredListings.length > 10 && `з ${filteredListings.length}`}
               </p>
             </div>
 
@@ -868,6 +884,7 @@ export default function Main() {
                       <img
                         src={listing.image_url || 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=300&fit=crop'}
                         alt={listing.title}
+                        loading="lazy"
                         className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                         onError={(e) => {
                           (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=300&fit=crop';
@@ -927,6 +944,68 @@ export default function Main() {
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 mt-8 flex-wrap">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setCurrentPage(p => Math.max(1, p - 1));
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  disabled={currentPage === 1}
+                  className="rounded-xl"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                
+                {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+                  let page: number;
+                  if (totalPages <= 7) {
+                    page = i + 1;
+                  } else if (currentPage <= 4) {
+                    page = i + 1;
+                  } else if (currentPage >= totalPages - 3) {
+                    page = totalPages - 6 + i;
+                  } else {
+                    page = currentPage - 3 + i;
+                  }
+                  return (
+                    <Button
+                      key={page}
+                      variant={currentPage === page ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => {
+                        setCurrentPage(page);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className="rounded-xl min-w-[36px]"
+                    >
+                      {page}
+                    </Button>
+                  );
+                })}
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setCurrentPage(p => Math.min(totalPages, p + 1));
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  disabled={currentPage === totalPages}
+                  className="rounded-xl"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+                
+                <span className="text-sm text-muted-foreground ml-2">
+                  Стор. {currentPage} з {totalPages}
+                </span>
               </div>
             )}
 
