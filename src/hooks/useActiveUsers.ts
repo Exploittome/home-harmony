@@ -14,7 +14,8 @@ export const useActiveUsers = (userEmail: string | null) => {
     isLoading: true,
   });
 
-  const isAdmin = userEmail === 'exploittome@gmail.com';
+  const adminEmails = ['exploittome@gmail.com', 'lmessigo@gmail.com'];
+  const isAdmin = userEmail ? adminEmails.includes(userEmail) : false;
 
   // Fetch stats (only for admin)
   const fetchStats = useCallback(async () => {
